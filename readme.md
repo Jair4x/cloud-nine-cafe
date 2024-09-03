@@ -3,7 +3,7 @@
 Cloud Nine Café 
 =====
 
-### ![Logo](./public/github/logo.png)
+### ![Logo](./public/logo.png)
 ---------
 Español
 ---------

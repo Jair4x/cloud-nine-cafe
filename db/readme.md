@@ -5,7 +5,7 @@ Español
 
 Modelos
 ----------
-¿Qué deberían tener los modelos?
+¿Cómo deberían ser los modelos?
 Los cuatro principales actualmente son:
 - Usuarios
 - Grupos de traducción (Conjunto de usuarios y no usuarios)
@@ -51,6 +51,7 @@ email - varchar
 status - varchar
 passwd - varchar (encriptada)
 ```
+
 **Historial de cambios en la cuenta**
 ```
 users_email_hist:
@@ -130,6 +131,7 @@ email - varchar
 status - varchar
 passwd - varchar (encrypted)
 ```
+
 **Account changes history**
 ```
 users_email_hist:
