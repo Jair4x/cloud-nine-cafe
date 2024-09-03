@@ -1,9 +1,10 @@
 Español
-----------
-##### [English ver.](#English)
+=======
+#### [English ver.](#English)
 ## Base de Datos
 
-### Modelos
+Modelos
+----------
 ¿Qué deberían tener los modelos?
 Los cuatro principales actualmente son:
 - Usuarios
@@ -14,7 +15,8 @@ Los cuatro principales actualmente son:
 Pero...
 **¿Cómo los hacemos?**
 
-#### Usuarios (users)
+Usuarios (users)
+----------
 **Definir cosas**
 ```
 users:
@@ -76,11 +78,12 @@ until - date (null si es permanente)
 -----------
 
 English
-----------
-##### [Ver. Español](#Español)
+=======
+#### [Ver. Español](#Español)
 ## Database
 
-### Models
+Models
+----------
 How should the models be?
 Right now, the four main ones are:
 - Users
@@ -91,7 +94,8 @@ Right now, the four main ones are:
 But then...
 **How do we make them?**
 
-#### Users
+Users
+----------
 **Define stuff**
 ```
 users:
