@@ -8,12 +8,12 @@ Cloud Nine Café
 Español
 ---------
 
-#### ¿Qué es esto?
+### ¿Qué es esto?
 Un repositorio que contiene todo el código fuente y documentación de la página de Cloud Nine Café: [cafecloudnine.com](https://cafecloudnine.com).
 
 Cloud Nine Café es una comunidad hispanohablante dedicada a las Novelas Visuales y sus traducciones.
 
-#### Contenidos de este repositorio
+### Contenidos de este repositorio
 - Base de datos (Modelos y SQL)
 - API (Auth + BiancaAPI)
 - Backend (Toda la lógica de la página)
@@ -21,12 +21,12 @@ Cloud Nine Café es una comunidad hispanohablante dedicada a las Novelas Visuale
 ---------
 English
 ---------
-#### What is this?
+### What is this?
 A repo that contains all the source code and documentation of Cloud Nine Café's website: [cafecloudnine.com](https://cafecloudnine.com).
 
 Cloud Nine Café is a spanish community dedicated to Visual Novels and its translations.
 
-#### Contents of this repo
+### Contents of this repo
 - Database (Models & SQL)
 - API (Auth + BiancaAPI)
 - Backend (All the code for the website)
