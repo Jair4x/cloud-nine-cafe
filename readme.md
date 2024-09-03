@@ -35,7 +35,7 @@ Cloud Nine Café is a spanish community dedicated to Visual Novels and its trans
 Credits/Créditos
 =======
 ###### English
-[Yorhel](https://code.blicky.net/yorhel) for the creation of [VNDB](https://vndb.org/) and the encouragement for the creation of this project.
+[Yorhel](https://code.blicky.net/yorhel) for the creation of [VNDB](https://vndb.org/) and the encouragement needed for the creation of this project.
 
 Misumi from [Proyectos Misumi](https://vn.misumi.com.ar/) for offering us a place to host the website alongside theirs.
 
