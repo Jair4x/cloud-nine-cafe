@@ -1,10 +1,10 @@
-# [English](#english) / [Español](#Español)
-
 Cloud Nine Café 
 =====
 
 ### ![Logo](./public/logo.png)
 ---------
+##### [English](#english) / [Español](#Español)
+
 Español
 ---------
 
