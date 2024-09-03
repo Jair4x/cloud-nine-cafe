@@ -48,6 +48,6 @@ Every single affiliate to the community for their feedback and suggestions.
 
 Misumi de [Proyectos Misumi](https://vn.misumi.com.ar/) por ofrecernos un lugar para hostear la página en el mismo plan que ellos.
 
-La gente linda de la comunidad de [Cloud Nine Café](https://cafecloudnine.com/discord) su paciencia y su continuo apoyo.
+La gente linda de la comunidad de [Cloud Nine Café](https://cafecloudnine.com/discord) por su paciencia y su continuo apoyo.
 
 Cada uno de los afiliados a la comunidad por sus opiniones y sugerencias.
