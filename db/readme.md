@@ -102,7 +102,7 @@ id - int
 pid - int[] (IDs of posts)
 ```
 
-**Group changes history**
+	**Historial  de cambios de Grupo**
 ```
 tl_group_name_hist:
 id - int
