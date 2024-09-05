@@ -31,7 +31,7 @@ users_extras:
 id - int
 bio - text
 socials - text[]
-tl_groupss - int
+tl_group - int
 tl_languages - text[]
 w_skin - int
 
@@ -295,7 +295,7 @@ users_extras:
 id - int
 bio - text
 socials - text[]
-tl_groupss - int
+tl_group - int
 tl_languages - text[]
 w_skin - int
 
@@ -345,7 +345,7 @@ Translation Groups (tl_groups)
 ----------
 **Define stuff**
 ```
-tl_groupss:
+tl_groups:
 id - int
 uid - int (owner of the group)
 name - varchar
@@ -356,7 +356,7 @@ status - varchar (active, dead)
 deleted - boolean
 hidden - boolean
 
-tl_groupss_members:
+tl_groups_members:
 id - int
 uid - int (owner of the group)
 r_mem - int[] (IDs of registered members)
