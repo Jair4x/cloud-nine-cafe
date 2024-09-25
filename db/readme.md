@@ -6,7 +6,7 @@ Español
 Modelos
 ----------
 ¿Cómo deberían ser los modelos?
-Los cuatro principales actualmente son:
+Los cuatro (o cinco) principales actualmente son:
 - Usuarios
 - Grupos de traducción (Conjunto de usuarios y no usuarios)
 - Posts (Parches de Novelas Visuales)
@@ -14,6 +14,24 @@ Los cuatro principales actualmente son:
 
 Pero...
 **¿Cómo los hacemos?**
+
+**Nota**: Cada modelo tiene una propiedad `hidden` y una propiedad `locked`, las cuales fueron inspiradas en el schema oficial de VNDB, que usa estas propiedades.
+
+Moderación/Aprobación necesitada:
+`hidden` = true
+`locked` = false
+
+Bloqueado/a:
+`hidden` = false
+`locked` = true
+
+Eliminado/a:
+`hidden` = true
+`locked` = true
+
+Normal (accesible por todos):
+`hidden` = false
+`locked` = false
 
 Usuarios (users)
 ----------
@@ -261,6 +279,91 @@ old - varchar
 new - varchar
 ```
 
+Comentarios (comments)
+----------
+**Definir**
+```
+comments:
+id - int
+parent - int (ID del comentario original)
+pid - int (ID del post)
+uid - int (ID del usuario comentando)
+content - text (límite: ~250 caracteres)
+date - date
+locked - boolean
+hidden - boolean
+
+comments_votes:
+id - int
+value - int (Contador de votos del comentario, siendo positivos, negativos o cero)
+voters - int[] (Lista de IDs de usuarios que votaron el comentario) -- No estoy seguro de si lo implementaré de esta manera.
+
+comments_reports:
+id - int
+value - int -- ¿Cuántos reportes tiene el comentario? (A partir de los 3, se envía una notificación al panel de moderación)
+reporters - int[] (Lista de IDs de usuarios que reportaron el comentario)
+```
+
+**Historial de cambios de comentario**
+```
+comments_cont_edit_hist:
+id - int
+date - date
+old_content - text
+new_content - text
+
+comments_mod_hist:
+id - int
+date - date
+locked - boolean
+hidden - boolean
+```
+
+Reseñas (reviews)
+----------
+Nota: Estas **no** son reseñas sobre las traducciones, sino de las novelas en sí.
+**Definir**
+```
+reviews:
+id - int
+pid - int (ID del post)
+uid - int (ID del usuario que hace la reseña)
+content - text
+score - smallint -- 1 ("Basura total") to 5 ("¡GOTY of the year del año!")
+locked - boolean
+hidden - boolean
+
+reviews_attachments: -- Analizando si agregar esto, con fe y podré implementarlo.
+id - int
+attachments - varchar[] (Links relativos a las imágenes que estarán en el footer de la reseña)
+
+reviews_reports:
+id - int
+value - int -- ¿Cuántos reportes tiene la reseña? (A partir de los 3, se envía una notificación al panel de moderación)
+reporters - int[] (Lista de IDs de los usuarios que reportaron la reseña)
+```
+
+**Historial de cambios de reseña**
+```
+reviews_content_hist:
+id - int
+date - date
+old - varchar
+new - varchar
+
+reviews_score_hist:
+id - int
+date - date
+old - varchar
+new - varchar
+
+reviews_mod_hist:
+id - int
+date - date
+locked - boolean
+hidden - boolean
+```
+
 
 English
 =======
@@ -270,7 +373,7 @@ English
 Models
 ----------
 How should the models be?
-Right now, the four main ones are:
+Right now, the four (or five) main ones are:
 - Users
 - Translation Groups (Has users and not-users)
 - Posts (Visual Novel Patches)
@@ -278,6 +381,24 @@ Right now, the four main ones are:
 
 But then...
 **How do we make them?**
+
+One thing to **note**, though: Every model has a `locked` and `hidden` property, inspired by the official schema of VNDB, which uses the same properties.
+
+Moderation/Approval needed:
+`hidden` = true
+`locked` = false
+
+Locked:
+`hidden` = false
+`locked` = true
+
+Deleted:
+`hidden` = true
+`locked` = true
+
+Normal (accessible by anyone):
+`hidden` = false
+`locked` = false
 
 Users (users)
 ----------
@@ -448,7 +569,7 @@ percentage - smallint (% of completion of the patch)
 section - varchar (translating, editing, QA, released) -- Kinda like how Project Sekai or other groups show progress, giving a % and saying what exactly are they doing. It's a neat idea, but I might need some feedback for it.
 ```
 
-**Post changes history**
+**Post change history**
 ```
 posts_group_hist:
 id - int
@@ -523,4 +644,89 @@ id - int
 date - date
 old - varchar
 new - varchar
+```
+
+Comments (comments)
+----------
+**Define stuff**
+```
+comments:
+id - int
+parent - int (ID of original/parent comment)
+pid - int (ID of the post)
+uid - int (ID of the user who commented)
+content - text (limit: ~250 characters)
+date - date
+locked - boolean
+hidden - boolean
+
+comments_votes:
+id - int
+value - int (Count of the comment's votes, being either positive, negative or zero)
+voters - int[] (List of IDs of users who voted the comment) -- Not sure if I'll implement it this way, but for now I'll leave it as that.
+
+comments_reports:
+id - int
+value - int -- How many reports does the comment have? (On 3 reports, an alert will get sent to the moderation dashboard)
+reporters - int[] (List of IDs of users who reported the comment)
+```
+
+**Comments change history**
+```
+comments_cont_edit_hist:
+id - int
+date - date
+old_content - text
+new_content - text
+
+comments_mod_hist:
+id - int
+date - date
+locked - boolean
+hidden - boolean
+```
+
+Reviews (reviews)
+----------
+Note: These are **not** translation reviews, but rather reviews for the visual novels.
+**Define stuff**
+```
+reviews:
+id - int
+pid - int (ID of the post)
+uid - int (ID of the user who's reviewing)
+content - text
+score - smallint -- 1 ("absolute dogwater") to 5 ("what a masterpiece!")
+locked - boolean
+hidden - boolean
+
+reviews_attachments: -- Analyzing if I'll add this, hopefully I can make it work.
+id - int
+attachments - varchar[] (Relative links to images included in the footer of the review)
+
+reviews_reports:
+id - int
+value - int -- How many reports does the review have? (On 3 reports, an alert will get sent to the moderation dashboard)
+reporters - int[] (List of IDs of users who reported the review)
+```
+
+**Reviews change history**
+```
+reviews_content_hist:
+id - int
+date - date
+old - varchar
+new - varchar
+
+reviews_score_hist:
+id - int
+date - date
+old - varchar
+new - varchar
+
+reviews_mod_hist:
+id - int
+date - date
+locked - boolean
+hidden - boolean
 ```
