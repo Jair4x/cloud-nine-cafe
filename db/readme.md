@@ -33,6 +33,7 @@ Normal (accesible por todos):
 `hidden` = false
 `locked` = false
 
+
 Usuarios (users)
 ----------
 **Definir cosas**
@@ -101,7 +102,7 @@ Grupos de Traducción (tl_groups)
 ```
 tl_groups:
 id - int
-uid - int (dueño/a del grupo)
+owner_id - int
 name - varchar
 r_name - varchar (en caso de que algún grupo use nombres con caracteres fuera del latin)
 description - text
@@ -112,13 +113,13 @@ hidden - boolean
 
 tl_groups_members:
 id - int
-uid - int
+owner_id - int
 r_mem - int[] (IDs de usuarios registrados)
 nr_mem varchar[] (nombres de usuarios no registrados)
 
 tl_groups_posts:
 id - int
-pid - int[] (IDs de posts en la página)
+posts_id - int[] (IDs de posts en la página)
 ```
 
 **Historial  de cambios de Grupo**
@@ -179,8 +180,8 @@ Posts (posts)
 ```
 posts:
 id - int
-uid - int (ID del usuario que hizo el post)
-gid - int (ID del grupo que traduce/tradujo la novela)
+op_id - int (ID del usuario que hizo el post)
+group_id - int (ID del grupo que traduce/tradujo la novela)
 published - date
 lang - varchar (idioma desde el que se tradujo la novela visual)
 image - varchar (link a la imagen de portada)
@@ -193,7 +194,7 @@ hidden - boolean
 posts_details:
 id - int
 length - smallint (número de horas que toma en promedio completar la novela) -- Puede que lo cambie más adelante si encuentro una manera en plan VNDB para las horas, como el rango de [0 - 5] y el tema de las horas exactas.
-classif - varchar (All ages, +15, +18)
+classification - varchar (All ages, +15, +18)
 status - varchar (publicado, trabajando en ello, hiatus)
 
 posts_progress:
@@ -207,8 +208,8 @@ section - varchar (traduciendo, editando/corrigiendo, QC, lanzado) -- Más o men
 posts_group_hist:
 id - int
 date - date
-old_gid - int
-new_gid - int
+old_group_id - int
+new_group_id - int
 
 posts_lang_hist:
 id - int
@@ -253,7 +254,7 @@ date - date
 old - smallint
 new - smallint
 
-posts_classif_hist:
+posts_classification_hist:
 id - int
 date - date
 old - varchar
@@ -286,8 +287,8 @@ Comentarios (comments)
 comments:
 id - int
 parent - int (ID del comentario original)
-pid - int (ID del post)
-uid - int (ID del usuario comentando)
+post_id - int (ID del post)
+poster_id - int (ID del usuario comentando)
 content - text (límite: ~250 caracteres)
 date - date
 locked - boolean
@@ -326,8 +327,8 @@ Nota: Estas **no** son reseñas sobre las traducciones, sino de las novelas en s
 ```
 reviews:
 id - int
-pid - int (ID del post)
-uid - int (ID del usuario que hace la reseña)
+post_id - int (ID del post)
+reviewer_id - int (ID del usuario que hace la reseña)
 content - text
 score - smallint -- 1 ("Basura total") to 5 ("¡GOTY of the year del año!")
 locked - boolean
@@ -400,6 +401,7 @@ Normal (accessible by anyone):
 `hidden` = false
 `locked` = false
 
+
 Users (users)
 ----------
 **Define stuff**
@@ -468,7 +470,7 @@ Translation Groups (tl_groups)
 ```
 tl_groups:
 id - int
-uid - int (owner of the group)
+owner_id - int
 name - varchar
 r_name - varchar (in case someone uses a non-latin name)
 description - text
@@ -479,7 +481,7 @@ hidden - boolean
 
 tl_groups_members:
 id - int
-uid - int (owner of the group)
+owner_id - int
 r_mem - int[] (IDs of registered members)
 nr_mem varchar[] (names of non-registered members)
 
@@ -546,8 +548,8 @@ Posts (posts)
 ```
 posts:
 id - int
-uid - int (ID of the user who made the post)
-gid - int (ID of the group that translated the visual novel)
+op_id - int (ID of the user who made the post)
+group_id - int (ID of the group that translated the visual novel)
 published - date
 lang - varchar (language the visual novel was translated from)
 image - varchar (link to cover image)
@@ -560,7 +562,7 @@ hidden - boolean
 posts_details:
 id - int
 length - smallint (number of hours that the visual novel takes to complete on average) -- Might change later if I find a vndb-like way to get two types of lengths, kinda like the [0 - 5] range and the hours thingy.
-classif - varchar (All ages, +15, +18)
+classification - varchar (All ages, +15, +18)
 status - varchar (published, working on it, hiatus)
 
 posts_progress:
@@ -574,8 +576,8 @@ section - varchar (translating, editing, QA, released) -- Kinda like how Project
 posts_group_hist:
 id - int
 date - date
-old_gid - int
-new_gid - int
+old_group_id - int
+new_group_id - int
 
 posts_lang_hist:
 id - int
@@ -620,7 +622,7 @@ date - date
 old - smallint
 new - smallint
 
-posts_classif_hist:
+posts_classification_hist:
 id - int
 date - date
 old - varchar
@@ -653,8 +655,8 @@ Comments (comments)
 comments:
 id - int
 parent - int (ID of original/parent comment)
-pid - int (ID of the post)
-uid - int (ID of the user who commented)
+post_id - int (ID of the post)
+poster_id - int (ID of the user who commented)
 content - text (limit: ~250 characters)
 date - date
 locked - boolean
@@ -673,7 +675,7 @@ reporters - int[] (List of IDs of users who reported the comment)
 
 **Comments change history**
 ```
-comments_cont_edit_hist:
+comments_content_edit_hist:
 id - int
 date - date
 old_content - text
@@ -688,13 +690,13 @@ hidden - boolean
 
 Reviews (reviews)
 ----------
-Note: These are **not** translation reviews, but rather reviews for the visual novels.
+Note: These are **not** translation reviews, but rather reviews for the visual novels themselves.
 **Define stuff**
 ```
 reviews:
 id - int
-pid - int (ID of the post)
-uid - int (ID of the user who's reviewing)
+post_id - int (ID of the post)
+reviewer_id - int (ID of the user who's reviewing)
 content - text
 score - smallint -- 1 ("absolute dogwater") to 5 ("what a masterpiece!")
 locked - boolean
