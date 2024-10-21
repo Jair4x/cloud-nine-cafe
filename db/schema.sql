@@ -43,7 +43,7 @@ CREATE TABLE users_hidden_info (
 CREATE TABLE users_reports (
     user_id INT NOT NULL,
     reporter_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL
 );
 
@@ -58,27 +58,27 @@ CREATE TABLE users_extras_privacy (
 
 CREATE TABLE users_email_hist (
     user_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE users_username_hist (
     user_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE users_password_hist (
     user_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users_mod_hist (
     user_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     mod_action ENUM('Ban', 'Mute') NOT NULL,
     reason TEXT NOT NULL,
     until TIMESTAMP
@@ -87,7 +87,7 @@ CREATE TABLE users_mod_hist (
 -- ----- Web Skins ----- --
 
 CREATE TABLE web_skins (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SMALLINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(30) NOT NULL,
     primary_color VARCHAR(7) NOT NULL,
     secondary_color VARCHAR(7) NOT NULL,
@@ -130,14 +130,14 @@ CREATE TABLE tl_groups (
 );
 
 CREATE TABLE tl_groups_alias (
-    group_id UNIQUE INT NOT NULL,
+    group_id INT UNIQUE NOT NULL,
     alias_1 VARCHAR(255),
     alias_2 VARCHAR(255),
     alias_3 VARCHAR(255)
 );
 
 CREATE TABLE tl_groups_socials (
-    group_id UNIQUE INT NOT NULL,
+    group_id INT UNIQUE NOT NULL,
     facebook VARCHAR(255),
     twitter VARCHAR(255),
     discord VARCHAR(255),
@@ -145,7 +145,7 @@ CREATE TABLE tl_groups_socials (
 );
 
 CREATE TABLE tl_groups_languages (
-    group_id UNIQUE INT NOT NULL,
+    group_id INT UNIQUE NOT NULL,
     language_id_1 INT NOT NULL,
     language_id_2 INT NOT NULL,
     language_id_3 INT NOT NULL
@@ -155,7 +155,7 @@ CREATE TABLE tl_groups_members (
     group_id INT NOT NULL,
     user_id INT,
     name VARCHAR(255),
-    role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL DEFAULT 'Traductor/a',
+    role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL DEFAULT 'Traductor/a'
 );
 
 CREATE TABLE tl_groups_translations (
@@ -167,7 +167,7 @@ CREATE TABLE tl_groups_updates (
     id INT PRIMARY KEY AUTO_INCREMENT,
     group_id INT NOT NULL,
     user_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0
@@ -183,7 +183,7 @@ CREATE TABLE tl_groups_hidden_data (
 CREATE TABLE tl_groups_reports (
     group_id INT NOT NULL,
     reporter_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL
 );
 
@@ -191,21 +191,21 @@ CREATE TABLE tl_groups_reports (
 
 CREATE TABLE tl_groups_name_hist (
     group_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
     new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE tl_groups_latin_name_hist (
     group_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
     new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE tl_groups_alias_hist (
     group_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old_1 VARCHAR(255),
     old_2 VARCHAR(255),
     old_3 VARCHAR(255),
@@ -216,14 +216,14 @@ CREATE TABLE tl_groups_alias_hist (
 
 CREATE TABLE tl_groups_description_hist (
     group_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
     new TEXT NOT NULL
 );
 
 CREATE TABLE tl_groups_language_hist (
     group_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old_1 INT,
     old_2 INT,
     old_3 INT,
@@ -234,7 +234,7 @@ CREATE TABLE tl_groups_language_hist (
 
 CREATE TABLE tl_groups_status_hist (
     group_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old ENUM('Activo', 'Q.E.P.D') NOT NULL,
     new ENUM('Activo', 'Q.E.P.D') NOT NULL
 );
@@ -242,7 +242,7 @@ CREATE TABLE tl_groups_status_hist (
 CREATE TABLE tl_groups_members_hist (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
     member_id INT,
     member_name VARCHAR(255) -- In case the member is not registered (nr = non-registered)
@@ -251,14 +251,14 @@ CREATE TABLE tl_groups_members_hist (
 CREATE TABLE tl_groups_translations_hist (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Eliminado') NOT NULL,
     post_id INT NOT NULL
 );
 
 CREATE TABLE tl_groups_updates_hist (
     update_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old_content TEXT,
     new_content TEXT,
     hidden BOOLEAN,
@@ -268,7 +268,7 @@ CREATE TABLE tl_groups_updates_hist (
 CREATE TABLE tl_groups_mod_hist (
     group_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     locked BOOLEAN NOT NULL,
     hidden BOOLEAN NOT NULL
@@ -278,7 +278,7 @@ CREATE TABLE tl_groups_mod_hist (
 
 CREATE TABLE languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL
 );
 
 -- ----- Posts ----- --
@@ -352,7 +352,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     -- 3 = "Medio" (Entre 10 y 30 horas)
     -- 4 = "Largo" (Entre 30 y 50 horas)
     -- 5 = "Muy largo" (Más de 50 horas)
-    id INT PRIMARY KEY,
+    id SMALLINT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
 
@@ -360,42 +360,42 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
 
 CREATE TABLE posts_title_hist (
     post_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
     new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_download_link_hist (
     post_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
     new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_cover_image_hist (
     post_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
     new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_sinopsis_hist (
     post_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
     new TEXT NOT NULL
 );
 
 CREATE TABLE posts_length_hist (
     post_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old SMALLINT NOT NULL,
     new SMALLINT NOT NULL
 );
 
 CREATE TABLE posts_buy_links_hist (
     post_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
     platform ENUM('Steam', 'Itch.io', 'DLSite', 'Mangagamer', 'JAST USA', 'Others') NOT NULL,
     link VARCHAR(255) NOT NULL
@@ -435,7 +435,7 @@ CREATE TABLE comments_reports (
 
 CREATE TABLE comments_content_hist (
     comment_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
     new TEXT NOT NULL
 );
@@ -443,7 +443,7 @@ CREATE TABLE comments_content_hist (
 CREATE TABLE comments_mod_hist (
     comment_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     hidden BOOLEAN NOT NULL,
     locked BOOLEAN NOT NULL
@@ -489,21 +489,21 @@ CREATE TABLE reviews_reports (
 
 CREATE TABLE reviews_content_hist (
     review_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
     new TEXT NOT NULL
 );
 
 CREATE TABLE reviews_rating_hist (
     review_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old SMALLINT NOT NULL,
     new SMALLINT NOT NULL
 );
 
 CREATE TABLE reviews_attachments_hist (
     review_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Eliminado') NOT NULL,
     attachment VARCHAR(255) NOT NULL
 );
@@ -511,7 +511,7 @@ CREATE TABLE reviews_attachments_hist (
 CREATE TABLE reviews_mod_hist (
     review_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     hidden BOOLEAN NOT NULL,
     locked BOOLEAN NOT NULL
@@ -525,6 +525,8 @@ CREATE TABLE reviews_mod_hist (
 -- So uhh... MariaDB doesn't accept multiple CHECK constraints in a single column, so I had to do this.
 -- Also, some things that need to be checked.
 --
+
+DELIMITER //
 
 -- ----- Users ----- --
 -- Validating user socials handlers
@@ -540,7 +542,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Tu handle de Discord debe comenzar en "@".';
     END IF;
-END;
+END//
 
 
 -- Validating user hidden data
@@ -556,7 +558,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
-END;
+END//
 
 
 -- Validating reports made to users
@@ -567,7 +569,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'No puedes reportarte a ti mismo.';
     END IF;
-END;
+END//
 
 
 -- ----- Web Skins ----- --
@@ -599,7 +601,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'El color de texto debe comenzar en "#".';
     END IF;
-END;
+END//
 
 
 -- ----- TL Groups ----- --
@@ -626,25 +628,25 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Tu link de página web debe comenzar en "http" o "https".';
     END IF;
-END;
+END//
 
 
 -- Making sure aliases don't repeat themselves or another group has them as a name. (Aliases can be repeated, what we don't want is someone using an alias that's already being used by another group as their name)
 CREATE TRIGGER validate_group_aliases
 BEFORE INSERT ON tl_groups_alias
 FOR EACH ROW BEGIN
-    IF NEW.alias1 = NEW.alias2 OR NEW.alias1 = NEW.alias3 OR NEW.alias2 = NEW.alias3 THEN
+    IF NEW.alias_1 = NEW.alias_2 OR NEW.alias_1 = NEW.alias_3 OR NEW.alias_2 = NEW.alias_3 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Las alias del grupo no pueden ser iguales';
     END IF;
 
-    IF (EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias1 OR latin_name = NEW.alias1) AND id != NEW.group_id) OR
-        EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias2 OR latin_name = NEW.alias2) AND id != NEW.group_id) OR
-        EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias3 OR latin_name = NEW.alias3) AND id != NEW.group_id)) THEN
+    IF (EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_1 OR latin_name = NEW.alias_1) AND id != NEW.group_id) OR
+        EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_2 OR latin_name = NEW.alias_2) AND id != NEW.group_id) OR
+        EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_3 OR latin_name = NEW.alias_3) AND id != NEW.group_id)) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Uno de los alias ya está siendo usado como nombre de otro grupo.';
     END IF;
-END;
+END//
 
 
 -- Validating a group's hidden data
@@ -655,7 +657,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
-END;
+END//
 
 
 -- ----- Posts ----- --
@@ -672,7 +674,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Link de descarga inválido.';
     END IF;
-END;
+END//
 
 
 -- Validating posts aliases to prevent different visual novels having the same alias or name.
@@ -688,15 +690,15 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'El apodo que intentas agregar ya está siendo usado por otro post.';
     END IF;
-END;
+END//
 
 
 -- Validate post details
 CREATE TRIGGER validate_post_details
 BEFORE INSERT ON posts_details
 FOR EACH ROW BEGIN
-    IF sinopsis IS NULL THEN
-        sinopsis = 'Esta novela aún no tiene una sinopsis.';
+    IF NEW.sinopsis IS NULL THEN
+        SET NEW.sinopsis = 'Esta novela aún no tiene una sinopsis.';
     END IF;
     
     IF NEW.classification NOT IN ('All ages', '13+', '16+', '18+') THEN
@@ -708,7 +710,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'El estado de traducción no es válido.';
     END IF;
-END;
+END//
 
 
 -- Validate post buy links
@@ -719,7 +721,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Link de compra inválido.';
     END IF;
-END;
+END//
 
 
 -- Validate post translation progress
@@ -730,7 +732,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Porcentaje de traducción inválido.';
     END IF;
-END;
+END//
 
 
 -- Validate post hidden data
@@ -741,7 +743,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
-END;
+END//
 
 
 -- ----- Comments ----- --
@@ -753,7 +755,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'El comentario al que intentas responder no existe o fue eliminado.';
     END IF;
-END;
+END//
 
 
 -- Validate comment hidden data
@@ -764,7 +766,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
-END;
+END//
 
 
 -- ----- Reviews ----- --
@@ -776,7 +778,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'La calificación debe estar entre 1 y 5.';
     END IF;
-END;
+END//
 
 
 -- Validate review attachments
@@ -787,7 +789,7 @@ FOR EACH ROW BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Link de imagen inválido.';
     END IF;
-END;
+END//
 
 
 -- Validate review hidden data
@@ -800,6 +802,7 @@ FOR EACH ROW BEGIN
     END IF;
 END;
 
+DELIMITER ;
 
 -- ----------------- --
 --   Foreign Keys    --
@@ -837,7 +840,7 @@ ALTER TABLE users_mod_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE users_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
 
 -- ----- Web Skins ----- --
-ALTER TABLE web_skins ADD FOREIGN KEY (id) REFERENCES users_web_prefs(web_skin);
+-- Nothing to do here, just leaving this here for the sake of consistency.
 
 -- ----- Roles ----- --
 ALTER TABLE roles_perms ADD FOREIGN KEY (role_id) REFERENCES roles(id);
