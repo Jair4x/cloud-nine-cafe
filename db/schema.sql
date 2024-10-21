@@ -1,9 +1,9 @@
------------------------------------------------------
--- Cloud Nine Café - Comunidad de Novelas Visuales --
------------------------------------------------------
+-- ------------------------------------------------- --
+--  Cloud Nine Café - Comunidad de Novelas Visuales  --
+-- ------------------------------------------------- --
 
 
-------- Users -------
+-- ----- Users ----- --
 
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -20,51 +20,41 @@ CREATE TABLE users_extras (
     bio TEXT,
     tl_group INT,
     twitter VARCHAR(255),
-    discord VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (tl_group) REFERENCES tl_groups(id)
+    discord VARCHAR(255)
 );
 
 CREATE TABLE users_web_prefs (
     user_id INT NOT NULL,
-    web_skin SMALLINT NOT NULL DEFAULT 1,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (web_skin) REFERENCES web_skins(id)
+    web_skin SMALLINT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE users_role (
     user_id INT NOT NULL,
-    role_id INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
+    role_id INT NOT NULL
 );
 
 CREATE TABLE users_hidden_info (
     user_id INT NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password TEXT NOT NULL, -- This will be obviously hashed and salted, so if you're going to try and hack this, good luck!
-    reports SMALLINT NOT NULL DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    reports SMALLINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE users_reports (
     user_id INT NOT NULL,
     reporter_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (reporter_id) REFERENCES users(id)
+    reason TEXT NOT NULL
 );
 
 CREATE TABLE users_extras_privacy (
     user_id INT NOT NULL,
     bio_hidden BOOLEAN NOT NULL DEFAULT 0,
     twitter_hidden BOOLEAN NOT NULL DEFAULT 0,
-    discord_hidden BOOLEAN NOT NULL DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    discord_hidden BOOLEAN NOT NULL DEFAULT 0
 );
 
-------- Users' history -------
+-- ----- Users' history ----- --
 
 CREATE TABLE users_email_hist (
     user_id INT NOT NULL,
@@ -91,12 +81,10 @@ CREATE TABLE users_mod_hist (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     mod_action ENUM('Ban', 'Mute') NOT NULL,
     reason TEXT NOT NULL,
-    until TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (mod_id) REFERENCES users(id)
+    until TIMESTAMP
 );
 
-------- Web Skins -------
+-- ----- Web Skins ----- --
 
 CREATE TABLE web_skins (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -108,7 +96,7 @@ CREATE TABLE web_skins (
     text_color VARCHAR(7) NOT NULL
 );
 
-------- Roles -------
+-- ----- Roles ----- --
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -117,12 +105,10 @@ CREATE TABLE roles (
 
 CREATE TABLE roles_perms (
     role_id INT NOT NULL,
-    perm_id INT NOT NULL,
-    FOREIGN KEY (role_id) REFERENCES roles(id),
-    FOREIGN KEY (perm_id) REFERENCES perms(id)
+    perm_id INT NOT NULL
 );
 
-------- Permissions -------
+-- ----- Permissions ----- --
 --
 -- Want to know more about the permissions? Check out PERMS.md
 --
@@ -132,7 +118,7 @@ CREATE TABLE perms (
     name VARCHAR(255) NOT NULL
 );
 
-------- TL Groups -------
+-- ----- TL Groups ----- --
 
 CREATE TABLE tl_groups (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -140,16 +126,14 @@ CREATE TABLE tl_groups (
     name VARCHAR(255) NOT NULL,
     latin_name VARCHAR(255) NOT NULL, -- In case the name uses non-latin characters, This will be the "main name".
     description TEXT NOT NULL,
-    status ENUM('Activo', 'Q.E.P.D') NOT NULL DEFAULT 'Activo',
-    FOREIGN KEY (owner_id) REFERENCES users(id)
+    status ENUM('Activo', 'Q.E.P.D') NOT NULL DEFAULT 'Activo'
 );
 
 CREATE TABLE tl_groups_alias (
     group_id UNIQUE INT NOT NULL,
     alias_1 VARCHAR(255),
     alias_2 VARCHAR(255),
-    alias_3 VARCHAR(255),
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    alias_3 VARCHAR(255)
 );
 
 CREATE TABLE tl_groups_socials (
@@ -157,19 +141,14 @@ CREATE TABLE tl_groups_socials (
     facebook VARCHAR(255),
     twitter VARCHAR(255),
     discord VARCHAR(255),
-    website VARCHAR(255),
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    website VARCHAR(255)
 );
 
 CREATE TABLE tl_groups_languages (
     group_id UNIQUE INT NOT NULL,
     language_id_1 INT NOT NULL,
     language_id_2 INT NOT NULL,
-    language_id_3 INT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (language_id_1) REFERENCES languages(id),
-    FOREIGN KEY (language_id_2) REFERENCES languages(id),
-    FOREIGN KEY (language_id_3) REFERENCES languages(id)
+    language_id_3 INT NOT NULL
 );
 
 CREATE TABLE tl_groups_members (
@@ -177,15 +156,11 @@ CREATE TABLE tl_groups_members (
     user_id INT,
     name VARCHAR(255),
     role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL DEFAULT 'Traductor/a',
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE tl_groups_translations (
     group_id INT NOT NULL,
-    post_id INT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    post_id INT NOT NULL
 );
 
 CREATE TABLE tl_groups_updates (
@@ -195,44 +170,37 @@ CREATE TABLE tl_groups_updates (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT 0,
-    locked BOOLEAN NOT NULL DEFAULT 0,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    locked BOOLEAN NOT NULL DEFAULT 0
 );
 
 CREATE TABLE tl_groups_hidden_data (
     group_id INT NOT NULL,
     reports SMALLINT NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0,
-    hidden BOOLEAN NOT NULL DEFAULT 0,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    hidden BOOLEAN NOT NULL DEFAULT 0
 );
 
 CREATE TABLE tl_groups_reports (
     group_id INT NOT NULL,
     reporter_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (reporter_id) REFERENCES users(id)
+    reason TEXT NOT NULL
 );
 
-------- Translation Groups' History -------
+-- ----- Translation Groups' History ----- --
 
 CREATE TABLE tl_groups_name_hist (
     group_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE tl_groups_latin_name_hist (
     group_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE tl_groups_alias_hist (
@@ -243,16 +211,14 @@ CREATE TABLE tl_groups_alias_hist (
     old_3 VARCHAR(255),
     new_1 VARCHAR(255),
     new_2 VARCHAR(255),
-    new_3 VARCHAR(255),
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    new_3 VARCHAR(255)
 );
 
 CREATE TABLE tl_groups_description_hist (
     group_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
-    new TEXT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    new TEXT NOT NULL
 );
 
 CREATE TABLE tl_groups_language_hist (
@@ -263,22 +229,14 @@ CREATE TABLE tl_groups_language_hist (
     old_3 INT,
     new_1 INT,
     new_2 INT,
-    new_3 INT,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (old_1) REFERENCES languages(id),
-    FOREIGN KEY (old_2) REFERENCES languages(id),
-    FOREIGN KEY (old_3) REFERENCES languages(id),
-    FOREIGN KEY (new_1) REFERENCES languages(id),
-    FOREIGN KEY (new_2) REFERENCES languages(id),
-    FOREIGN KEY (new_3) REFERENCES languages(id)
+    new_3 INT
 );
 
 CREATE TABLE tl_groups_status_hist (
     group_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old ENUM('Activo', 'Q.E.P.D') NOT NULL,
-    new ENUM('Activo', 'Q.E.P.D') NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    new ENUM('Activo', 'Q.E.P.D') NOT NULL
 );
 
 CREATE TABLE tl_groups_members_hist (
@@ -287,10 +245,7 @@ CREATE TABLE tl_groups_members_hist (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
     member_id INT,
-    member_name VARCHAR(255), -- In case the member is not registered (nr = non-registered)
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (member_id) REFERENCES users(id)
+    member_name VARCHAR(255) -- In case the member is not registered (nr = non-registered)
 );
 
 CREATE TABLE tl_groups_translations_hist (
@@ -298,10 +253,7 @@ CREATE TABLE tl_groups_translations_hist (
     user_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Eliminado') NOT NULL,
-    post_id INT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    post_id INT NOT NULL
 );
 
 CREATE TABLE tl_groups_updates_hist (
@@ -310,8 +262,7 @@ CREATE TABLE tl_groups_updates_hist (
     old_content TEXT,
     new_content TEXT,
     hidden BOOLEAN,
-    locked BOOLEAN,
-    FOREIGN KEY (update_id) REFERENCES tl_groups_updates(id)
+    locked BOOLEAN
 );
 
 CREATE TABLE tl_groups_mod_hist (
@@ -320,21 +271,19 @@ CREATE TABLE tl_groups_mod_hist (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     locked BOOLEAN NOT NULL,
-    hidden BOOLEAN NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id),
-    FOREIGN KEY (mod_id) REFERENCES users(id)
+    hidden BOOLEAN NOT NULL
 );
 
-------- Languages -------
+-- ----- Languages ----- --
 
 CREATE TABLE languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
 );
 
-------- Posts -------
+-- ----- Posts ----- --
 --
--- I'm going to cry an awful lot while thinking about this part.
+-- I cried an awful lot while thinking about this part.
 -- You've been warned, I'm not joking.
 --
 
@@ -346,22 +295,17 @@ CREATE TABLE posts (
     cover_image VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL, -- Title of the visual novel (in romaji/latin characters)
     download_link VARCHAR(255) NOT NULL, -- Link to download the translation
-    download_note TEXT, -- Note about the download link
-    FOREIGN KEY (op_id) REFERENCES users(id),
-    FOREIGN KEY (translated_from) REFERENCES languages(id)
+    download_note TEXT -- Note about the download link
 );
 
 CREATE TABLE posts_translators (
     post_id INT NOT NULL,
-    group_id INT NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (group_id) REFERENCES tl_groups(id)
+    group_id INT NOT NULL
 );
 
 CREATE TABLE posts_aliases (
     post_id INT NOT NULL,
-    alias VARCHAR(255) NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    alias VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_details (
@@ -372,42 +316,35 @@ CREATE TABLE posts_details (
     tl_type ENUM('Manual', 'MTL', 'MTL editado') NOT NULL,
     tl_status ENUM('En progreso', 'Completada', 'Pausada', 'Cancelada') NOT NULL,
     tl_scope ENUM('Completa', 'Parcial') NOT NULL,
-    tl_platform ENUM('PC', 'Android', 'Otros') NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (game_length) REFERENCES game_length(id)
+    tl_platform ENUM('PC', 'Android', 'Otros') NOT NULL
 );
 
 CREATE TABLE posts_buy_links (
     post_id INT NOT NULL,
     platform ENUM('Steam', 'Itch.io', 'DLSite', 'Mangagamer', 'JAST USA', 'Others') NOT NULL,
-    link VARCHAR(255) NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    link VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_tl_progress (
     post_id INT NOT NULL,
     tl_percentage SMALLINT NOT NULL,
-    tl_section ENUM('Traduciendo', 'Corrigiendo', 'Editando imágenes', 'Reinsertando', 'Testeando') NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    tl_section ENUM('Traduciendo', 'Corrigiendo', 'Editando imágenes', 'Reinsertando', 'Testeando') NOT NULL
 );
 
 CREATE TABLE posts_hidden_data (
     post_id INT NOT NULL,
     locked BOOLEAN NOT NULL DEFAULT 0,
     hidden BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    reports SMALLINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE posts_reports (
     post_id INT NOT NULL,
     user_id INT NOT NULL,
-    reason TEXT NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    reason TEXT NOT NULL
 );
 
-------- Posts' length -------
+-- ----- Posts' length ----- --
 
 CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 hours), 5 = Very long (More than 50 hours)
     -- 1 = "Muy corto" (Menos de 2 horas)
@@ -419,48 +356,41 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     name VARCHAR(255) NOT NULL
 );
 
-------- Posts' history -------
+-- ----- Posts' history ----- --
 
 CREATE TABLE posts_title_hist (
     post_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_download_link_hist (
     post_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_cover_image_hist (
     post_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    new VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE posts_sinopsis_hist (
     post_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
-    new TEXT NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    new TEXT NOT NULL
 );
 
 CREATE TABLE posts_length_hist (
     post_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old SMALLINT NOT NULL,
-    new SMALLINT NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (old) REFERENCES game_length(id),
-    FOREIGN KEY (new) REFERENCES game_length(id)
+    new SMALLINT NOT NULL
 );
 
 CREATE TABLE posts_buy_links_hist (
@@ -468,11 +398,10 @@ CREATE TABLE posts_buy_links_hist (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
     platform ENUM('Steam', 'Itch.io', 'DLSite', 'Mangagamer', 'JAST USA', 'Others') NOT NULL,
-    link VARCHAR(255) NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    link VARCHAR(255) NOT NULL
 );
 
-------- Comments -------
+-- ----- Comments ----- --
 
 CREATE TABLE comments (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -481,43 +410,34 @@ CREATE TABLE comments (
     user_id INT NOT NULL,
     content TEXT NOT NULL,
     votes INT NOT NULL DEFAULT 0,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (parent_id) REFERENCES comments(id),
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE comments_votes (
     comment_id INT NOT NULL,
     user_id INT NOT NULL,
-    vote ENUM('Up', 'Down') NOT NULL,
-    FOREIGN KEY (comment_id) REFERENCES comments(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    vote ENUM('Up', 'Down') NOT NULL
 ); 
 
 CREATE TABLE comments_hidden_data (
     comment_id INT NOT NULL,
     locked BOOLEAN NOT NULL DEFAULT 0,
     hidden BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0,
-    FOREIGN KEY (comment_id) REFERENCES comments(id)
+    reports SMALLINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE comments_reports (
     comment_id INT NOT NULL,
-    user_id INT NOT NULL,
-    FOREIGN KEY (comment_id) REFERENCES comments(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    user_id INT NOT NULL
 );
 
-------- Comments' history -------
+-- ----- Comments' history ----- --
 
 CREATE TABLE comments_content_hist (
     comment_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
-    new TEXT NOT NULL,
-    FOREIGN KEY (comment_id) REFERENCES comments(id)
+    new TEXT NOT NULL
 );
 
 CREATE TABLE comments_mod_hist (
@@ -526,12 +446,10 @@ CREATE TABLE comments_mod_hist (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     hidden BOOLEAN NOT NULL,
-    locked BOOLEAN NOT NULL,
-    FOREIGN KEY (comment_id) REFERENCES comments(id),
-    FOREIGN KEY (mod_id) REFERENCES users(id)
+    locked BOOLEAN NOT NULL
 );
 
-------- Reviews -------
+-- ----- Reviews ----- --
 
 CREATE TABLE reviews (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -540,65 +458,54 @@ CREATE TABLE reviews (
     content TEXT NOT NULL,
     rating SMALLINT NOT NULL, -- 1 = "Utter bullsh*t" to 5 = "HOLY SH*T THIS IS AMAZING"
     votes INT NOT NULL DEFAULT 0,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (post_id) REFERENCES posts(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE reviews_attachments (
     review_id INT NOT NULL,
-    attachment VARCHAR(255) NOT NULL,
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    attachment VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE reviews_votes (
     review_id INT NOT NULL,
     user_id INT NOT NULL,
-    vote ENUM('Up', 'Down') NOT NULL,
-    FOREIGN KEY (review_id) REFERENCES reviews(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    vote ENUM('Up', 'Down') NOT NULL
 );
 
 CREATE TABLE reviews_hidden_data (
     review_id INT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0,
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    reports SMALLINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE reviews_reports (
     review_id INT NOT NULL,
     user_id INT NOT NULL,
-    reason TEXT,
-    FOREIGN KEY (review_id) REFERENCES reviews(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    reason TEXT
 );
 
-------- Reviews' history -------
+-- ----- Reviews' history ----- --
 
 CREATE TABLE reviews_content_hist (
     review_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old TEXT NOT NULL,
-    new TEXT NOT NULL,
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    new TEXT NOT NULL
 );
 
 CREATE TABLE reviews_rating_hist (
     review_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old SMALLINT NOT NULL,
-    new SMALLINT NOT NULL,
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    new SMALLINT NOT NULL
 );
 
 CREATE TABLE reviews_attachments_hist (
     review_id INT NOT NULL,
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Eliminado') NOT NULL,
-    attachment VARCHAR(255) NOT NULL,
-    FOREIGN KEY (review_id) REFERENCES reviews(id)
+    attachment VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE reviews_mod_hist (
@@ -607,21 +514,19 @@ CREATE TABLE reviews_mod_hist (
     when TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     hidden BOOLEAN NOT NULL,
-    locked BOOLEAN NOT NULL,
-    FOREIGN KEY (review_id) REFERENCES reviews(id),
-    FOREIGN KEY (mod_id) REFERENCES users(id)
+    locked BOOLEAN NOT NULL
 );
 
 
----------------------
--- Extra functions --
----------------------
+-- ----------------- --
+--  Extra functions  --
+-- ----------------- --
 --
 -- So uhh... MariaDB doesn't accept multiple CHECK constraints in a single column, so I had to do this.
 -- Also, some things that need to be checked.
 --
 
-------- Users -------
+-- ----- Users ----- --
 -- Validating user socials handlers
 CREATE TRIGGER validate_user_socials
 BEFORE INSERT ON users_extras
@@ -665,7 +570,7 @@ FOR EACH ROW BEGIN
 END;
 
 
-------- Web Skins -------
+-- ----- Web Skins ----- --
 -- Validating color format
 CREATE TRIGGER validate_web_color_schema
 BEFORE INSERT ON web_skins
@@ -697,7 +602,7 @@ FOR EACH ROW BEGIN
 END;
 
 
-------- TL Groups -------
+-- ----- TL Groups ----- --
 -- Validating social media handles and website links
 CREATE TRIGGER validate_group_socials
 BEFORE INSERT ON tl_groups_socials
@@ -753,7 +658,7 @@ FOR EACH ROW BEGIN
 END;
 
 
-------- Posts -------
+-- ----- Posts ----- --
 -- Validating post information
 CREATE TRIGGER validate_post_info
 BEFORE INSERT ON posts
@@ -839,7 +744,7 @@ FOR EACH ROW BEGIN
 END;
 
 
-------- Comments -------
+-- ----- Comments ----- --
 -- Validate parent comment
 CREATE TRIGGER validate_parent_comment
 BEFORE INSERT ON comments
@@ -862,7 +767,7 @@ FOR EACH ROW BEGIN
 END;
 
 
-------- Reviews -------
+-- ----- Reviews ----- --
 -- Validate reviews general info
 CREATE TRIGGER validate_review_info
 BEFORE INSERT ON reviews
@@ -894,3 +799,177 @@ FOR EACH ROW BEGIN
         SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
 END;
+
+
+-- ----------------- --
+--   Foreign Keys    --
+-- ----------------- --
+--
+-- Why, PHPMyAdmin? Why do you make me do this?
+--
+
+
+-- ----- Users ----- --
+ALTER TABLE users_extras ADD FOREIGN KEY (tl_group) REFERENCES tl_groups(id);
+ALTER TABLE users_extras ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE users_web_prefs ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE users_web_prefs ADD FOREIGN KEY (web_skin) REFERENCES web_skins(id);
+
+ALTER TABLE users_role ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE users_role ADD FOREIGN KEY (role_id) REFERENCES roles(id);
+
+ALTER TABLE users_hidden_info ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE users_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE users_reports ADD FOREIGN KEY (reporter_id) REFERENCES users(id);
+
+ALTER TABLE users_extras_privacy ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+-- ----- User History ----- --
+ALTER TABLE users_email_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE users_username_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE users_password_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE users_mod_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE users_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+
+-- ----- Web Skins ----- --
+ALTER TABLE web_skins ADD FOREIGN KEY (id) REFERENCES users_web_prefs(web_skin);
+
+-- ----- Roles ----- --
+ALTER TABLE roles_perms ADD FOREIGN KEY (role_id) REFERENCES roles(id);
+ALTER TABLE roles_perms ADD FOREIGN KEY (perm_id) REFERENCES perms(id);
+
+-- ----- Permissions ----- --
+-- Nothing to do here, just leaving this here for the sake of consistency.
+
+-- ----- TL Groups ----- --
+ALTER TABLE tl_groups ADD FOREIGN KEY (owner_id) REFERENCES users(id);
+
+ALTER TABLE tl_groups_alias ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_socials ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_languages ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_languages ADD FOREIGN KEY (language_id_1) REFERENCES languages(id);
+ALTER TABLE tl_groups_languages ADD FOREIGN KEY (language_id_2) REFERENCES languages(id);
+ALTER TABLE tl_groups_languages ADD FOREIGN KEY (language_id_3) REFERENCES languages(id);
+
+ALTER TABLE tl_groups_members ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_members ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE tl_groups_translations ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_translations ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+
+ALTER TABLE tl_groups_updates ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_updates ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE tl_groups_hidden_data ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_reports ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_reports ADD FOREIGN KEY (reporter_id) REFERENCES users(id);
+
+-- ----- TL Groups' History ----- --
+ALTER TABLE tl_groups_name_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_latin_name_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_alias_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_description_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (old_1) REFERENCES languages(id);
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (old_2) REFERENCES languages(id);
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (old_3) REFERENCES languages(id);
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (new_1) REFERENCES languages(id);
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (new_2) REFERENCES languages(id);
+ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (new_3) REFERENCES languages(id);
+
+ALTER TABLE tl_groups_status_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE tl_groups_members_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_members_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE tl_groups_members_hist ADD FOREIGN KEY (member_id) REFERENCES users(id);
+
+ALTER TABLE tl_groups_translations_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_translations_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE tl_groups_translations_hist ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+
+ALTER TABLE tl_groups_updates_hist ADD FOREIGN KEY (update_id) REFERENCES tl_groups_updates(id);
+
+ALTER TABLE tl_groups_mod_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+
+-- ----- Languages ----- --
+-- Nothing to do here, just leaving this here for the sake of consistency.
+
+-- ----- Posts ----- --
+ALTER TABLE posts ADD FOREIGN KEY (op_id) REFERENCES users(id);
+ALTER TABLE posts ADD FOREIGN KEY (translated_from) REFERENCES languages(id);
+
+ALTER TABLE posts_translators ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+ALTER TABLE posts_translators ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+
+ALTER TABLE posts_aliases ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+
+ALTER TABLE posts_details ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+ALTER TABLE posts_details ADD FOREIGN KEY (game_length) REFERENCES game_length(id);
+
+ALTER TABLE posts_buy_links ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+
+ALTER TABLE posts_tl_progress ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+
+ALTER TABLE posts_hidden_data ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+
+ALTER TABLE posts_reports ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+ALTER TABLE posts_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+-- ----- Posts' length ----- --
+-- Nothing to do here, just leaving this here for the sake of consistency.
+
+-- ----- Comments ----- --
+ALTER TABLE comments ADD FOREIGN KEY (parent_id) REFERENCES comments(id);
+ALTER TABLE comments ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+ALTER TABLE comments ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE comments_votes ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
+ALTER TABLE comments_votes ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE comments_hidden_data ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
+
+ALTER TABLE comments_reports ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
+ALTER TABLE comments_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+-- ----- Comments' History ----- --
+ALTER TABLE comments_content_hist ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
+
+ALTER TABLE comments_mod_hist ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
+ALTER TABLE comments_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+
+-- ----- Reviews ----- --
+ALTER TABLE reviews ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+ALTER TABLE reviews ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE reviews_attachments ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+
+ALTER TABLE reviews_votes ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+ALTER TABLE reviews_votes ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+ALTER TABLE reviews_hidden_data ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+
+ALTER TABLE reviews_reports ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+ALTER TABLE reviews_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
+
+-- ----- Reviews' History ----- --
+ALTER TABLE reviews_content_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+
+ALTER TABLE reviews_rating_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+
+ALTER TABLE reviews_attachments_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+
+ALTER TABLE reviews_mod_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+ALTER TABLE reviews_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
