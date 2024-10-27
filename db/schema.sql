@@ -88,7 +88,7 @@ CREATE TABLE users_mod_hist (
 
 CREATE TABLE web_skins (
     id SMALLINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(30) NOT NULL,
+    skin_name VARCHAR(30) NOT NULL,
     primary_color VARCHAR(7) NOT NULL,
     secondary_color VARCHAR(7) NOT NULL,
     accent_color VARCHAR(7) NOT NULL,
