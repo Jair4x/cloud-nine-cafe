@@ -278,7 +278,7 @@ CREATE TABLE tl_groups_mod_hist (
 
 CREATE TABLE languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL
+    lang_name VARCHAR(255) NOT NULL
 );
 
 -- ----- Posts ----- --
