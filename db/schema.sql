@@ -353,7 +353,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     -- 4 = "Largo" (Entre 30 y 50 horas)
     -- 5 = "Muy largo" (Más de 50 horas)
     id SMALLINT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
+    length_name VARCHAR(255) NOT NULL
 );
 
 -- ----- Posts' history ----- --
