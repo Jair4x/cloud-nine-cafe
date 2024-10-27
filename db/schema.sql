@@ -100,7 +100,7 @@ CREATE TABLE web_skins (
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL
+    role_name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE roles_perms (
@@ -115,7 +115,7 @@ CREATE TABLE roles_perms (
 
 CREATE TABLE perms (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL
+    perm_name VARCHAR(255) NOT NULL
 );
 
 -- ----- TL Groups ----- --
