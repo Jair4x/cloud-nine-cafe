@@ -278,6 +278,7 @@ CREATE TABLE tl_groups_mod_hist (
 
 CREATE TABLE languages (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    lang_code VARCHAR(5) NOT NULL,
     lang_name VARCHAR(255) NOT NULL
 );
 
@@ -291,7 +292,7 @@ CREATE TABLE posts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     op_id INT NOT NULL,
     published TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    translated_from INT NOT NULL,
+    translated_from VARCHAR(2) NOT NULL,
     cover_image VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL, -- Title of the visual novel (in romaji/latin characters)
     download_link VARCHAR(255) NOT NULL, -- Link to download the translation
@@ -912,7 +913,7 @@ ALTER TABLE tl_groups_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
 
 -- ----- Posts ----- --
 ALTER TABLE posts ADD FOREIGN KEY (op_id) REFERENCES users(id);
-ALTER TABLE posts ADD FOREIGN KEY (translated_from) REFERENCES languages(id);
+ALTER TABLE posts ADD FOREIGN KEY (translated_from) REFERENCES languages(lang_code);
 
 ALTER TABLE posts_translators ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 ALTER TABLE posts_translators ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
