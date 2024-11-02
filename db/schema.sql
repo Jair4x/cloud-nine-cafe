@@ -84,6 +84,16 @@ CREATE TABLE users_mod_hist (
     until TIMESTAMP
 );
 
+-- ----- Sessions ----- --
+-- How did I even forget this until now?
+
+CREATE TABLE user_sessions (
+    user_id INT NOT NULL,
+    session_id TEXT NOT NULL,
+    expires TIMESTAMP NOT NULL
+);
+
+
 -- ----- Web Skins ----- --
 
 CREATE TABLE web_skins (
@@ -839,6 +849,9 @@ ALTER TABLE users_password_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
 ALTER TABLE users_mod_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE users_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+
+-- ----- Sessions ----- --
+ALTER TABLE user_sessions ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- ----- Web Skins ----- --
 -- Nothing to do here, just leaving this here for the sake of consistency.
