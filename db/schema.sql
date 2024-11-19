@@ -2,6 +2,37 @@
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
 
+-- ----- History ----- --
+-- Most previously made history tables have been replaced by these ones to make management more efficient.
+CREATE TABLE change_history (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    entity_type ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review') NOT NULL,
+    entity_id INT NOT NULL, -- Affected Entity ID
+    field_changed VARCHAR(255) NOT NULL,
+    old_value TEXT,
+    new_value TEXT,
+    changed_by INT, -- ID of the user who made the change
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE report_history (
+    entity_type ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review') NOT NULL,
+    entity_id INT NOT NULL,
+    reporter_id INT NOT NULL,
+    reason TEXT NOT NULL,
+    report_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ----- Flags ----- --
+-- As I mentioned before, most of the hidden_data tables have been replaced by this one.
+CREATE TABLE entity_flags (
+    entity_type ENUM('Post', 'Comment', 'Review', 'Group') NOT NULL,
+    entity_id INT NOT NULL,
+    hidden BOOLEAN NOT NULL DEFAULT 0,
+    locked BOOLEAN NOT NULL DEFAULT 0,
+    reports SMALLINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (entity_type, entity_id)
+);
 
 -- ----- Users ----- --
 
@@ -9,22 +40,22 @@ CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(255) UNIQUE NOT NULL,
     display_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
     is_email_verified BOOLEAN NOT NULL DEFAULT 0,
     avatar VARCHAR(255) NOT NULL,
     status ENUM('Activo', 'Desactivado', 'Muteado', 'Baneado') NOT NULL DEFAULT 'Activo',
+    password TEXT NOT NULL, -- This will be obviously hashed and salted, so if you're going to try and hack this, good luck!
     registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users_extras (
-    user_id INT NOT NULL,
+CREATE TABLE users_preferences (
+    user_id INT PRIMARY KEY,
     bio TEXT,
-    tl_group INT,
+    bio_hidden BOOLEAN NOT NULL DEFAULT 0,
     twitter VARCHAR(255),
-    discord VARCHAR(255)
-);
-
-CREATE TABLE users_web_prefs (
-    user_id INT NOT NULL,
+    twitter_hidden BOOLEAN NOT NULL DEFAULT 0,
+    discord VARCHAR(255),
+    discord_hidden BOOLEAN NOT NULL DEFAULT 0,
     web_skin SMALLINT NOT NULL DEFAULT 1
 );
 
@@ -33,55 +64,20 @@ CREATE TABLE users_role (
     role_id INT NOT NULL
 );
 
-CREATE TABLE users_hidden_info (
-    user_id INT NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password TEXT NOT NULL, -- This will be obviously hashed and salted, so if you're going to try and hack this, good luck!
-    reports SMALLINT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE users_reports (
-    user_id INT NOT NULL,
-    reporter_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL
-);
-
-CREATE TABLE users_extras_privacy (
-    user_id INT NOT NULL,
-    bio_hidden BOOLEAN NOT NULL DEFAULT 0,
-    twitter_hidden BOOLEAN NOT NULL DEFAULT 0,
-    discord_hidden BOOLEAN NOT NULL DEFAULT 0
-);
-
 -- ----- Users' history ----- --
-
-CREATE TABLE users_email_hist (
-    user_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE users_username_hist (
-    user_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
 
 CREATE TABLE users_password_hist (
     user_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users_mod_hist (
+CREATE TABLE users_moderation_logs (
     user_id INT NOT NULL,
     mod_id INT NOT NULL,
     when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     mod_action ENUM('Ban', 'Mute') NOT NULL,
     reason TEXT NOT NULL,
-    until TIMESTAMP
+    until TIMESTAMP NULL
 );
 
 -- ----- Sessions ----- --
@@ -90,7 +86,7 @@ CREATE TABLE users_mod_hist (
 CREATE TABLE user_sessions (
     user_id INT NOT NULL,
     session_id TEXT NOT NULL,
-    expires TIMESTAMP NOT NULL
+    expires TIMESTAMP NULL
 );
 
 
@@ -139,26 +135,24 @@ CREATE TABLE tl_groups (
     status ENUM('Activo', 'Q.E.P.D') NOT NULL DEFAULT 'Activo'
 );
 
-CREATE TABLE tl_groups_alias (
-    group_id INT UNIQUE NOT NULL,
-    alias_1 VARCHAR(255),
-    alias_2 VARCHAR(255),
-    alias_3 VARCHAR(255)
+CREATE TABLE translations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,
+    group_id INT NOT NULL
 );
 
-CREATE TABLE tl_groups_socials (
-    group_id INT UNIQUE NOT NULL,
+CREATE TABLE tl_groups_metadata (
+    group_id INT PRIMARY KEY,
+    alias_1 VARCHAR(255),
+    alias_2 VARCHAR(255),
+    alias_3 VARCHAR(255),
     facebook VARCHAR(255),
     twitter VARCHAR(255),
     discord VARCHAR(255),
-    website VARCHAR(255)
-);
-
-CREATE TABLE tl_groups_languages (
-    group_id INT UNIQUE NOT NULL,
-    language_id_1 INT NOT NULL,
-    language_id_2 INT NOT NULL,
-    language_id_3 INT NOT NULL
+    website VARCHAR(255),
+    language_1 VARCHAR(2) NOT NULL,
+    language_2 VARCHAR(2),
+    language_3 VARCHAR(2)
 );
 
 CREATE TABLE tl_groups_members (
@@ -166,11 +160,6 @@ CREATE TABLE tl_groups_members (
     user_id INT,
     name VARCHAR(255),
     role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL DEFAULT 'Traductor/a'
-);
-
-CREATE TABLE tl_groups_translations (
-    group_id INT NOT NULL,
-    post_id INT NOT NULL
 );
 
 CREATE TABLE tl_groups_updates (
@@ -183,35 +172,7 @@ CREATE TABLE tl_groups_updates (
     locked BOOLEAN NOT NULL DEFAULT 0
 );
 
-CREATE TABLE tl_groups_hidden_data (
-    group_id INT NOT NULL,
-    reports SMALLINT NOT NULL DEFAULT 0,
-    locked BOOLEAN NOT NULL DEFAULT 0,
-    hidden BOOLEAN NOT NULL DEFAULT 0
-);
-
-CREATE TABLE tl_groups_reports (
-    group_id INT NOT NULL,
-    reporter_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL
-);
-
 -- ----- Translation Groups' History ----- --
-
-CREATE TABLE tl_groups_name_hist (
-    group_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE tl_groups_latin_name_hist (
-    group_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
 
 CREATE TABLE tl_groups_alias_hist (
     group_id INT NOT NULL,
@@ -224,46 +185,13 @@ CREATE TABLE tl_groups_alias_hist (
     new_3 VARCHAR(255)
 );
 
-CREATE TABLE tl_groups_description_hist (
-    group_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old TEXT NOT NULL,
-    new TEXT NOT NULL
-);
-
-CREATE TABLE tl_groups_language_hist (
-    group_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_1 INT,
-    old_2 INT,
-    old_3 INT,
-    new_1 INT,
-    new_2 INT,
-    new_3 INT
-);
-
-CREATE TABLE tl_groups_status_hist (
-    group_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old ENUM('Activo', 'Q.E.P.D') NOT NULL,
-    new ENUM('Activo', 'Q.E.P.D') NOT NULL
-);
-
 CREATE TABLE tl_groups_members_hist (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
     when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
     member_id INT,
-    member_name VARCHAR(255) -- In case the member is not registered (nr = non-registered)
-);
-
-CREATE TABLE tl_groups_translations_hist (
-    group_id INT NOT NULL,
-    user_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    action ENUM('Añadido', 'Eliminado') NOT NULL,
-    post_id INT NOT NULL
+    nr_member_name VARCHAR(255) -- In case the member is not registered (nr = non-registered)
 );
 
 CREATE TABLE tl_groups_updates_hist (
@@ -275,7 +203,7 @@ CREATE TABLE tl_groups_updates_hist (
     locked BOOLEAN
 );
 
-CREATE TABLE tl_groups_mod_hist (
+CREATE TABLE tl_groups_moderation_logs (
     group_id INT NOT NULL,
     mod_id INT NOT NULL,
     when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -287,8 +215,7 @@ CREATE TABLE tl_groups_mod_hist (
 -- ----- Languages ----- --
 
 CREATE TABLE languages (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    lang_code VARCHAR(5) NOT NULL,
+    lang_code VARCHAR(2) NOT NULL PRIMARY KEY,
     lang_name VARCHAR(255) NOT NULL
 );
 
@@ -309,11 +236,6 @@ CREATE TABLE posts (
     download_note TEXT -- Note about the download link
 );
 
-CREATE TABLE posts_translators (
-    post_id INT NOT NULL,
-    group_id INT NOT NULL
-);
-
 CREATE TABLE posts_aliases (
     post_id INT NOT NULL,
     alias VARCHAR(255) NOT NULL
@@ -327,32 +249,14 @@ CREATE TABLE posts_details (
     tl_type ENUM('Manual', 'MTL', 'MTL editado') NOT NULL,
     tl_status ENUM('En progreso', 'Completada', 'Pausada', 'Cancelada') NOT NULL,
     tl_scope ENUM('Completa', 'Parcial') NOT NULL,
-    tl_platform ENUM('PC', 'Android', 'Otros') NOT NULL
-);
-
-CREATE TABLE posts_buy_links (
-    post_id INT NOT NULL,
-    platform ENUM('Steam', 'Itch.io', 'DLSite', 'Mangagamer', 'JAST USA', 'Others') NOT NULL,
-    link VARCHAR(255) NOT NULL
+    tl_platform ENUM('PC', 'Android', 'Otros') NOT NULL,
+    buy_links JSON -- [{"platform": "Steam", "link": "https://..."}]
 );
 
 CREATE TABLE posts_tl_progress (
     post_id INT NOT NULL,
     tl_percentage SMALLINT NOT NULL,
     tl_section ENUM('Traduciendo', 'Corrigiendo', 'Editando imágenes', 'Reinsertando', 'Testeando') NOT NULL
-);
-
-CREATE TABLE posts_hidden_data (
-    post_id INT NOT NULL,
-    locked BOOLEAN NOT NULL DEFAULT 0,
-    hidden BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE posts_reports (
-    post_id INT NOT NULL,
-    user_id INT NOT NULL,
-    reason TEXT NOT NULL
 );
 
 -- ----- Posts' length ----- --
@@ -368,49 +272,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
 );
 
 -- ----- Posts' history ----- --
-
-CREATE TABLE posts_title_hist (
-    post_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE posts_download_link_hist (
-    post_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE posts_cover_image_hist (
-    post_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old VARCHAR(255) NOT NULL,
-    new VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE posts_sinopsis_hist (
-    post_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old TEXT NOT NULL,
-    new TEXT NOT NULL
-);
-
-CREATE TABLE posts_length_hist (
-    post_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old SMALLINT NOT NULL,
-    new SMALLINT NOT NULL
-);
-
-CREATE TABLE posts_buy_links_hist (
-    post_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
-    platform ENUM('Steam', 'Itch.io', 'DLSite', 'Mangagamer', 'JAST USA', 'Others') NOT NULL,
-    link VARCHAR(255) NOT NULL
-);
+-- This part has been now replaced by the change_history table.
 
 -- ----- Comments ----- --
 
@@ -428,30 +290,11 @@ CREATE TABLE comments_votes (
     comment_id INT NOT NULL,
     user_id INT NOT NULL,
     vote ENUM('Up', 'Down') NOT NULL
-); 
-
-CREATE TABLE comments_hidden_data (
-    comment_id INT NOT NULL,
-    locked BOOLEAN NOT NULL DEFAULT 0,
-    hidden BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE comments_reports (
-    comment_id INT NOT NULL,
-    user_id INT NOT NULL
 );
 
 -- ----- Comments' history ----- --
 
-CREATE TABLE comments_content_hist (
-    comment_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old TEXT NOT NULL,
-    new TEXT NOT NULL
-);
-
-CREATE TABLE comments_mod_hist (
+CREATE TABLE comments_moderation_logs (
     comment_id INT NOT NULL,
     mod_id INT NOT NULL,
     when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -469,12 +312,8 @@ CREATE TABLE reviews (
     content TEXT NOT NULL,
     rating SMALLINT NOT NULL, -- 1 = "Utter bullsh*t" to 5 = "HOLY SH*T THIS IS AMAZING"
     votes INT NOT NULL DEFAULT 0,
+    attachments JSON, -- ["https://...", "https://..."]
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE reviews_attachments (
-    review_id INT NOT NULL,
-    attachment VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE reviews_votes (
@@ -483,34 +322,7 @@ CREATE TABLE reviews_votes (
     vote ENUM('Up', 'Down') NOT NULL
 );
 
-CREATE TABLE reviews_hidden_data (
-    review_id INT NOT NULL,
-    hidden BOOLEAN NOT NULL DEFAULT 0,
-    locked BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE reviews_reports (
-    review_id INT NOT NULL,
-    user_id INT NOT NULL,
-    reason TEXT
-);
-
 -- ----- Reviews' history ----- --
-
-CREATE TABLE reviews_content_hist (
-    review_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old TEXT NOT NULL,
-    new TEXT NOT NULL
-);
-
-CREATE TABLE reviews_rating_hist (
-    review_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old SMALLINT NOT NULL,
-    new SMALLINT NOT NULL
-);
 
 CREATE TABLE reviews_attachments_hist (
     review_id INT NOT NULL,
@@ -519,7 +331,7 @@ CREATE TABLE reviews_attachments_hist (
     attachment VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE reviews_mod_hist (
+CREATE TABLE reviews_moderation_logs (
     review_id INT NOT NULL,
     mod_id INT NOT NULL,
     when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -542,7 +354,7 @@ DELIMITER //
 -- ----- Users ----- --
 -- Validating user socials handlers
 CREATE TRIGGER validate_user_socials
-BEFORE INSERT ON users_extras
+BEFORE INSERT ON users_preferences
 FOR EACH ROW BEGIN
     IF (NEW.twitter IS NOT NULL AND NEW.twitter NOT LIKE '@%') THEN
         SIGNAL SQLSTATE '45000'
@@ -552,33 +364,6 @@ FOR EACH ROW BEGIN
     IF (NEW.discord IS NOT NULL AND NEW.discord NOT LIKE '@%') THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Tu handle de Discord debe comenzar en "@".';
-    END IF;
-END//
-
-
--- Validating user hidden data
-CREATE TRIGGER validate_user_hidden_data
-BEFORE INSERT ON users_hidden_info
-FOR EACH ROW BEGIN
-    IF NEW.email NOT LIKE '%_@__%.__%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El email no es válido.';
-    END IF;
-
-    IF NEW.reports < 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
-    END IF;
-END//
-
-
--- Validating reports made to users
-CREATE TRIGGER validate_user_reports
-BEFORE INSERT ON users_reports
-FOR EACH ROW BEGIN
-    IF NEW.user_id = NEW.reporter_id THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'No puedes reportarte a ti mismo.';
     END IF;
 END//
 
@@ -618,7 +403,7 @@ END//
 -- ----- TL Groups ----- --
 -- Validating social media handles and website links
 CREATE TRIGGER validate_group_socials
-BEFORE INSERT ON tl_groups_socials
+BEFORE INSERT ON tl_groups_metadata
 FOR EACH ROW BEGIN
     IF (NEW.facebook IS NOT NULL AND NEW.facebook NOT LIKE '/%') THEN
         SIGNAL SQLSTATE '45000'
@@ -644,7 +429,7 @@ END//
 
 -- Making sure aliases don't repeat themselves or another group has them as a name. (Aliases can be repeated, what we don't want is someone using an alias that's already being used by another group as their name)
 CREATE TRIGGER validate_group_aliases
-BEFORE INSERT ON tl_groups_alias
+BEFORE INSERT ON tl_groups_metadata
 FOR EACH ROW BEGIN
     IF NEW.alias_1 = NEW.alias_2 OR NEW.alias_1 = NEW.alias_3 OR NEW.alias_2 = NEW.alias_3 THEN
         SIGNAL SQLSTATE '45000'
@@ -656,17 +441,6 @@ FOR EACH ROW BEGIN
         EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_3 OR latin_name = NEW.alias_3) AND id != NEW.group_id)) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Uno de los alias ya está siendo usado como nombre de otro grupo.';
-    END IF;
-END//
-
-
--- Validating a group's hidden data
-CREATE TRIGGER validate_group_hidden_data
-BEFORE INSERT ON tl_groups_hidden_data
-FOR EACH ROW BEGIN
-    IF NEW.reports < 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
 END//
 
@@ -724,17 +498,6 @@ FOR EACH ROW BEGIN
 END//
 
 
--- Validate post buy links
-CREATE TRIGGER validate_post_buy_links
-BEFORE INSERT ON posts_buy_links
-FOR EACH ROW BEGIN
-    IF NEW.link NOT LIKE 'http%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Link de compra inválido.';
-    END IF;
-END//
-
-
 -- Validate post translation progress
 CREATE TRIGGER validate_post_tl_progress
 BEFORE INSERT ON posts_tl_progress
@@ -742,17 +505,6 @@ FOR EACH ROW BEGIN
     IF NEW.tl_percentage < 0 OR NEW.tl_percentage > 100 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Porcentaje de traducción inválido.';
-    END IF;
-END//
-
-
--- Validate post hidden data
-CREATE TRIGGER validate_post_hidden_data
-BEFORE INSERT ON posts_hidden_data
-FOR EACH ROW BEGIN
-    IF NEW.reports < 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
     END IF;
 END//
 
@@ -769,17 +521,6 @@ FOR EACH ROW BEGIN
 END//
 
 
--- Validate comment hidden data
-CREATE TRIGGER validate_comment_hidden_data
-BEFORE INSERT ON comments_hidden_data
-FOR EACH ROW BEGIN
-    IF NEW.reports < 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
-    END IF;
-END//
-
-
 -- ----- Reviews ----- --
 -- Validate reviews general info
 CREATE TRIGGER validate_review_info
@@ -791,28 +532,6 @@ FOR EACH ROW BEGIN
     END IF;
 END//
 
-
--- Validate review attachments
-CREATE TRIGGER validate_review_attachments
-BEFORE INSERT ON reviews_attachments
-FOR EACH ROW BEGIN
-    IF NEW.attachment NOT LIKE 'http%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Link de imagen inválido.';
-    END IF;
-END//
-
-
--- Validate review hidden data
-CREATE TRIGGER validate_review_hidden_data
-BEFORE INSERT ON reviews_hidden_data
-FOR EACH ROW BEGIN
-    IF NEW.reports < 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Los reportes no pueden ser menores a 0.';
-    END IF;
-END;
-
 DELIMITER ;
 
 -- ----------------- --
@@ -822,131 +541,55 @@ DELIMITER ;
 -- Why, PHPMyAdmin? Why do you make me do this?
 --
 
+-- ----- History ----- --
+ALTER TABLE change_history ADD FOREIGN KEY (changed_by) REFERENCES users(id);
+
+ALTER TABLE report_history ADD FOREIGN KEY (reporter_id) REFERENCES users(id);
 
 -- ----- Users ----- --
-ALTER TABLE users_extras ADD FOREIGN KEY (tl_group) REFERENCES tl_groups(id);
-ALTER TABLE users_extras ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
-ALTER TABLE users_web_prefs ADD FOREIGN KEY (user_id) REFERENCES users(id);
-ALTER TABLE users_web_prefs ADD FOREIGN KEY (web_skin) REFERENCES web_skins(id);
-
 ALTER TABLE users_role ADD FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE users_role ADD FOREIGN KEY (role_id) REFERENCES roles(id);
 
-ALTER TABLE users_hidden_info ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
-ALTER TABLE users_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
-ALTER TABLE users_reports ADD FOREIGN KEY (reporter_id) REFERENCES users(id);
-
-ALTER TABLE users_extras_privacy ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
 -- ----- User History ----- --
-ALTER TABLE users_email_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
-ALTER TABLE users_username_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
 ALTER TABLE users_password_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
-ALTER TABLE users_mod_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
-ALTER TABLE users_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+ALTER TABLE users_moderation_logs ADD FOREIGN KEY (user_id) REFERENCES users(id);
+ALTER TABLE users_moderation_logs ADD FOREIGN KEY (mod_id) REFERENCES users(id);
 
 -- ----- Sessions ----- --
 ALTER TABLE user_sessions ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
--- ----- Web Skins ----- --
--- Nothing to do here, just leaving this here for the sake of consistency.
 
 -- ----- Roles ----- --
 ALTER TABLE roles_perms ADD FOREIGN KEY (role_id) REFERENCES roles(id);
 ALTER TABLE roles_perms ADD FOREIGN KEY (perm_id) REFERENCES perms(id);
 
--- ----- Permissions ----- --
--- Nothing to do here, just leaving this here for the sake of consistency.
-
 -- ----- TL Groups ----- --
 ALTER TABLE tl_groups ADD FOREIGN KEY (owner_id) REFERENCES users(id);
 
-ALTER TABLE tl_groups_alias ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_socials ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_languages ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_languages ADD FOREIGN KEY (language_id_1) REFERENCES languages(id);
-ALTER TABLE tl_groups_languages ADD FOREIGN KEY (language_id_2) REFERENCES languages(id);
-ALTER TABLE tl_groups_languages ADD FOREIGN KEY (language_id_3) REFERENCES languages(id);
+ALTER TABLE tl_groups_metadata ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_metadata ADD FOREIGN KEY (language_1) REFERENCES languages(lang_code);
+ALTER TABLE tl_groups_metadata ADD FOREIGN KEY (language_2) REFERENCES languages(lang_code);
+ALTER TABLE tl_groups_metadata ADD FOREIGN KEY (language_3) REFERENCES languages(lang_code);
 
 ALTER TABLE tl_groups_members ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 ALTER TABLE tl_groups_members ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
-ALTER TABLE tl_groups_translations ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_translations ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-
 ALTER TABLE tl_groups_updates ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 ALTER TABLE tl_groups_updates ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
-ALTER TABLE tl_groups_hidden_data ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_reports ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_reports ADD FOREIGN KEY (reporter_id) REFERENCES users(id);
-
--- ----- TL Groups' History ----- --
-ALTER TABLE tl_groups_name_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_latin_name_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_alias_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_description_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (old_1) REFERENCES languages(id);
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (old_2) REFERENCES languages(id);
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (old_3) REFERENCES languages(id);
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (new_1) REFERENCES languages(id);
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (new_2) REFERENCES languages(id);
-ALTER TABLE tl_groups_language_hist ADD FOREIGN KEY (new_3) REFERENCES languages(id);
-
-ALTER TABLE tl_groups_status_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-
-ALTER TABLE tl_groups_members_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_members_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
-ALTER TABLE tl_groups_members_hist ADD FOREIGN KEY (member_id) REFERENCES users(id);
-
-ALTER TABLE tl_groups_translations_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_translations_hist ADD FOREIGN KEY (user_id) REFERENCES users(id);
-ALTER TABLE tl_groups_translations_hist ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-
-ALTER TABLE tl_groups_updates_hist ADD FOREIGN KEY (update_id) REFERENCES tl_groups_updates(id);
-
-ALTER TABLE tl_groups_mod_hist ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
-ALTER TABLE tl_groups_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
-
--- ----- Languages ----- --
--- Nothing to do here, just leaving this here for the sake of consistency.
+ALTER TABLE tl_groups_moderation_logs ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
+ALTER TABLE tl_groups_moderation_logs ADD FOREIGN KEY (mod_id) REFERENCES users(id);
 
 -- ----- Posts ----- --
 ALTER TABLE posts ADD FOREIGN KEY (op_id) REFERENCES users(id);
 ALTER TABLE posts ADD FOREIGN KEY (translated_from) REFERENCES languages(lang_code);
-
-ALTER TABLE posts_translators ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-ALTER TABLE posts_translators ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 
 ALTER TABLE posts_aliases ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 
 ALTER TABLE posts_details ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 ALTER TABLE posts_details ADD FOREIGN KEY (game_length) REFERENCES game_length(id);
 
-ALTER TABLE posts_buy_links ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-
 ALTER TABLE posts_tl_progress ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-
-ALTER TABLE posts_hidden_data ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-
-ALTER TABLE posts_reports ADD FOREIGN KEY (post_id) REFERENCES posts(id);
-ALTER TABLE posts_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
--- ----- Posts' length ----- --
--- Nothing to do here, just leaving this here for the sake of consistency.
 
 -- ----- Comments ----- --
 ALTER TABLE comments ADD FOREIGN KEY (parent_id) REFERENCES comments(id);
@@ -956,37 +599,19 @@ ALTER TABLE comments ADD FOREIGN KEY (user_id) REFERENCES users(id);
 ALTER TABLE comments_votes ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
 ALTER TABLE comments_votes ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
-ALTER TABLE comments_hidden_data ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
-
-ALTER TABLE comments_reports ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
-ALTER TABLE comments_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
 -- ----- Comments' History ----- --
-ALTER TABLE comments_content_hist ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
-
-ALTER TABLE comments_mod_hist ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
-ALTER TABLE comments_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+ALTER TABLE comments_moderation_logs ADD FOREIGN KEY (comment_id) REFERENCES comments(id);
+ALTER TABLE comments_moderation_logs ADD FOREIGN KEY (mod_id) REFERENCES users(id);
 
 -- ----- Reviews ----- --
 ALTER TABLE reviews ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 ALTER TABLE reviews ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
-ALTER TABLE reviews_attachments ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
-
 ALTER TABLE reviews_votes ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
 ALTER TABLE reviews_votes ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
-ALTER TABLE reviews_hidden_data ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
-
-ALTER TABLE reviews_reports ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
-ALTER TABLE reviews_reports ADD FOREIGN KEY (user_id) REFERENCES users(id);
-
 -- ----- Reviews' History ----- --
-ALTER TABLE reviews_content_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
-
-ALTER TABLE reviews_rating_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
-
 ALTER TABLE reviews_attachments_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
 
-ALTER TABLE reviews_mod_hist ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
-ALTER TABLE reviews_mod_hist ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+ALTER TABLE reviews_moderation_logs ADD FOREIGN KEY (review_id) REFERENCES reviews(id);
+ALTER TABLE reviews_moderation_logs ADD FOREIGN KEY (mod_id) REFERENCES users(id);
