@@ -267,7 +267,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     -- 3 = "Medio" (Entre 10 y 30 horas)
     -- 4 = "Largo" (Entre 30 y 50 horas)
     -- 5 = "Muy largo" (Más de 50 horas)
-    id SMALLINT PRIMARY KEY,
+    id SMALLINT PRIMARY KEY AUTO_INCREMENT,
     length_name VARCHAR(255) NOT NULL
 );
 
@@ -579,6 +579,10 @@ ALTER TABLE tl_groups_updates ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
 ALTER TABLE tl_groups_moderation_logs ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 ALTER TABLE tl_groups_moderation_logs ADD FOREIGN KEY (mod_id) REFERENCES users(id);
+
+-- ----- Translations ----- --
+ALTER TABLE translations ADD FOREIGN KEY (post_id) REFERENCES posts(id);
+ALTER TABLE translations ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 
 -- ----- Posts ----- --
 ALTER TABLE posts ADD FOREIGN KEY (op_id) REFERENCES users(id);
