@@ -1,4 +1,5 @@
 # Base de Datos / Database
+V2.0.0
 
 # Español
 
@@ -29,6 +30,10 @@ Eliminado/a:
 Normal (accesible por todos):
 `hidden` = false
 `locked` = false
+
+### Notificaciones (notifications)
+
+Modelo creado
 
 ### Historiales y Flags
 
