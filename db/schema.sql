@@ -1,6 +1,16 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
+-- Version: 1.2.5
+-- Date: 2024-11-23
+-- ------------------------------------------------- --
+-- Changelog 1.2.5:
+-- - This is now a thing, so you can see the changes made to the schema.
+-- - Added a new table to manage entity flags, reports and changes.
+-- - Fusioned most of the history tables into a single one. (change_history)
+-- - Fusioned all the reports tables into a single one. (report_history)
+-- - Fusioned all the hidden_data tables into a single one. (entity_flags)
+-- - Optimized the schema by removing or fusioning tables. (For example, users_extras, users_web_skins and users_privacy_prefs are now part of users_preferences)
 
 -- ----- History ----- --
 -- Most previously made history tables have been replaced by these ones to make management more efficient.
@@ -74,7 +84,7 @@ CREATE TABLE users_password_hist (
 CREATE TABLE users_moderation_logs (
     user_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     mod_action ENUM('Ban', 'Mute') NOT NULL,
     reason TEXT NOT NULL,
     until TIMESTAMP NULL
@@ -166,7 +176,7 @@ CREATE TABLE tl_groups_updates (
     id INT PRIMARY KEY AUTO_INCREMENT,
     group_id INT NOT NULL,
     user_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    post_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0
@@ -176,7 +186,7 @@ CREATE TABLE tl_groups_updates (
 
 CREATE TABLE tl_groups_alias_hist (
     group_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old_1 VARCHAR(255),
     old_2 VARCHAR(255),
     old_3 VARCHAR(255),
@@ -188,15 +198,16 @@ CREATE TABLE tl_groups_alias_hist (
 CREATE TABLE tl_groups_members_hist (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
     member_id INT,
-    nr_member_name VARCHAR(255) -- In case the member is not registered (nr = non-registered)
+    member_name VARCHAR(255), -- In case the member is not registered
+    role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL
 );
 
 CREATE TABLE tl_groups_updates_hist (
     update_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     old_content TEXT,
     new_content TEXT,
     hidden BOOLEAN,
@@ -206,7 +217,7 @@ CREATE TABLE tl_groups_updates_hist (
 CREATE TABLE tl_groups_moderation_logs (
     group_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     locked BOOLEAN NOT NULL,
     hidden BOOLEAN NOT NULL
@@ -221,14 +232,14 @@ CREATE TABLE languages (
 
 -- ----- Posts ----- --
 --
--- I cried an awful lot while thinking about this part.
+-- I stressed an awful lot while thinking about this part in the beginning.
 -- You've been warned, I'm not joking.
 --
 
 CREATE TABLE posts (
     id INT PRIMARY KEY AUTO_INCREMENT,
     op_id INT NOT NULL,
-    published TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    publish_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     translated_from VARCHAR(2) NOT NULL,
     cover_image VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL, -- Title of the visual novel (in romaji/latin characters)
@@ -250,7 +261,7 @@ CREATE TABLE posts_details (
     tl_status ENUM('En progreso', 'Completada', 'Pausada', 'Cancelada') NOT NULL,
     tl_scope ENUM('Completa', 'Parcial') NOT NULL,
     tl_platform ENUM('PC', 'Android', 'Otros') NOT NULL,
-    buy_links JSON -- [{"platform": "Steam", "link": "https://..."}]
+    buy_links JSON -- [{"plataforma": "Steam", "link": "https://..."}]
 );
 
 CREATE TABLE posts_tl_progress (
@@ -289,7 +300,8 @@ CREATE TABLE comments (
 CREATE TABLE comments_votes (
     comment_id INT NOT NULL,
     user_id INT NOT NULL,
-    vote ENUM('Up', 'Down') NOT NULL
+    vote ENUM('Up', 'Down') NOT NULL,
+    PRIMARY KEY(comment_id, user_id)
 );
 
 -- ----- Comments' history ----- --
@@ -297,7 +309,7 @@ CREATE TABLE comments_votes (
 CREATE TABLE comments_moderation_logs (
     comment_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     hidden BOOLEAN NOT NULL,
     locked BOOLEAN NOT NULL
@@ -326,7 +338,7 @@ CREATE TABLE reviews_votes (
 
 CREATE TABLE reviews_attachments_hist (
     review_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action ENUM('Añadido', 'Eliminado') NOT NULL,
     attachment VARCHAR(255) NOT NULL
 );
@@ -334,7 +346,7 @@ CREATE TABLE reviews_attachments_hist (
 CREATE TABLE reviews_moderation_logs (
     review_id INT NOT NULL,
     mod_id INT NOT NULL,
-    when_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL,
     hidden BOOLEAN NOT NULL,
     locked BOOLEAN NOT NULL
