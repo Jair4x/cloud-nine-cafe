@@ -1,42 +1,56 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 1.2.5
+-- Version: 2.0.0
 -- Date: 2024-11-23
 -- ------------------------------------------------- --
--- Changelog 1.2.5:
--- - This is now a thing, so you can see the changes made to the schema.
--- - Added a new table to manage entity flags, reports and changes.
--- - Fusioned most of the history tables into a single one. (change_history)
--- - Fusioned all the reports tables into a single one. (report_history)
--- - Fusioned all the hidden_data tables into a single one. (entity_flags)
--- - Optimized the schema by removing or fusioning tables. (For example, users_extras, users_web_skins and users_privacy_prefs are now part of users_preferences)
+-- Changelog 2.0.0:
+-- - Updated everything from MariaDB to PostgreSQL.
+-- - Removed/changed all triggers and functions since we can now use PostgreSQL checks and stuff.
+-- - Added the "notification" tables for Moderation purposes as well as triggers and functions for them.
+-- - Added indexes to make search faster.
+-- - Added the "original_lang" property to "posts".
+-- - Added a LOT of checks to regulate data.
+
+
+-- ----- Notifications ----- --
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    message TEXT NOT NULL CHECK (LENGTH(message) <= 200),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read BOOLEAN DEFAULT FALSE
+);
 
 -- ----- History ----- --
 -- Most previously made history tables have been replaced by these ones to make management more efficient.
+
+CREATE TYPE e_type AS ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review');
+CREATE TYPE e_type2 AS ENUM('Post', 'Comment', 'Review', 'Group');
+
 CREATE TABLE change_history (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    entity_type ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review') NOT NULL,
+    id INT SERIAL PRIMARY KEY,
+    entity_type e_type NOT NULL,
     entity_id INT NOT NULL, -- Affected Entity ID
     field_changed VARCHAR(255) NOT NULL,
-    old_value TEXT,
-    new_value TEXT,
+    old_value TEXT CHECK (LENGTH(old_value) <= 500),
+    new_value TEXT CHECK (LENGTH(new_value) <= 500),
     changed_by INT, -- ID of the user who made the change
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE report_history (
-    entity_type ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review') NOT NULL,
+    entity_type e_type NOT NULL,
     entity_id INT NOT NULL,
     reporter_id INT NOT NULL,
-    reason TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     report_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ----- Flags ----- --
 -- As I mentioned before, most of the hidden_data tables have been replaced by this one.
 CREATE TABLE entity_flags (
-    entity_type ENUM('Post', 'Comment', 'Review', 'Group') NOT NULL,
+    entity_type e_type2 NOT NULL,
     entity_id INT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0,
@@ -46,27 +60,31 @@ CREATE TABLE entity_flags (
 
 -- ----- Users ----- --
 
+CREATE TYPE user_status AS ENUM('Activo', 'Desactivado', 'Muteado', 'Baneado');
+
 CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    id INT SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    email VARCHAR(128) UNIQUE NOT NULL,
     is_email_verified BOOLEAN NOT NULL DEFAULT 0,
     avatar VARCHAR(255) NOT NULL,
-    status ENUM('Activo', 'Desactivado', 'Muteado', 'Baneado') NOT NULL DEFAULT 'Activo',
+    status user_status NOT NULL DEFAULT 'Activo',
     password TEXT NOT NULL, -- This will be obviously hashed and salted, so if you're going to try and hack this, good luck!
     registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users_preferences (
     user_id INT PRIMARY KEY,
-    bio TEXT,
+    bio TEXT CHECK (LENGTH(bio) <= 250),
     bio_hidden BOOLEAN NOT NULL DEFAULT 0,
-    twitter VARCHAR(255),
+    twitter VARCHAR(16),
     twitter_hidden BOOLEAN NOT NULL DEFAULT 0,
-    discord VARCHAR(255),
+    discord VARCHAR(14),
     discord_hidden BOOLEAN NOT NULL DEFAULT 0,
-    web_skin SMALLINT NOT NULL DEFAULT 1
+    web_skin SMALLINT NOT NULL DEFAULT 1,
+    CHECK (twitter IS NULL OR twitter LIKE '@%'),
+    CHECK (discord IS NULL OR discord LIKE '.gg/%')
 );
 
 CREATE TABLE users_role (
@@ -75,6 +93,8 @@ CREATE TABLE users_role (
 );
 
 -- ----- Users' history ----- --
+
+CREATE TYPE mod_action AS ENUM('Ban', 'Mute');
 
 CREATE TABLE users_password_hist (
     user_id INT NOT NULL,
@@ -85,8 +105,8 @@ CREATE TABLE users_moderation_logs (
     user_id INT NOT NULL,
     mod_id INT NOT NULL,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    mod_action ENUM('Ban', 'Mute') NOT NULL,
-    reason TEXT NOT NULL,
+    action mod_action NOT NULL,
+    reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     until TIMESTAMP NULL
 );
 
@@ -103,19 +123,24 @@ CREATE TABLE user_sessions (
 -- ----- Web Skins ----- --
 
 CREATE TABLE web_skins (
-    id SMALLINT PRIMARY KEY AUTO_INCREMENT,
+    id SMALLINT SERIAL PRIMARY KEY,
     skin_name VARCHAR(30) NOT NULL,
     primary_color VARCHAR(7) NOT NULL,
     secondary_color VARCHAR(7) NOT NULL,
     accent_color VARCHAR(7) NOT NULL,
     background_color VARCHAR(7) NOT NULL,
-    text_color VARCHAR(7) NOT NULL
+    text_color VARCHAR(7) NOT NULL,
+    CHECK (primary_color LIKE '#%'),
+    CHECK (secondary_color LIKE '#%'),
+    CHECK (accent_color LIKE '#%'),
+    CHECK (background_color LIKE '#%'),
+    CHECK (text_color LIKE '#%')
 );
 
 -- ----- Roles ----- --
 
 CREATE TABLE roles (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     role_name VARCHAR(255) NOT NULL
 );
 
@@ -130,86 +155,99 @@ CREATE TABLE roles_perms (
 --
 
 CREATE TABLE perms (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     perm_name VARCHAR(255) NOT NULL
 );
 
 -- ----- TL Groups ----- --
 
+CREATE TYPE group_status AS ENUM('Activo', 'Q.E.P.D');
+CREATE TYPE group_role AS ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a');
+
 CREATE TABLE tl_groups (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     owner_id INT NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    latin_name VARCHAR(255) NOT NULL, -- In case the name uses non-latin characters, This will be the "main name".
-    description TEXT NOT NULL,
-    status ENUM('Activo', 'Q.E.P.D') NOT NULL DEFAULT 'Activo'
+    name VARCHAR(100) NOT NULL,
+    latin_name VARCHAR(100) NOT NULL, -- In case the name uses non-latin characters, This will be the "main name".
+    description TEXT NOT NULL CHECK (LENGTH(description) <= 500),
+    status group_status NOT NULL DEFAULT 'Activo'
 );
 
 CREATE TABLE translations (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     post_id INT NOT NULL,
     group_id INT NOT NULL
 );
 
 CREATE TABLE tl_groups_metadata (
     group_id INT PRIMARY KEY,
-    alias_1 VARCHAR(255),
-    alias_2 VARCHAR(255),
-    alias_3 VARCHAR(255),
-    facebook VARCHAR(255),
-    twitter VARCHAR(255),
-    discord VARCHAR(255),
+    alias_1 VARCHAR(100),
+    alias_2 VARCHAR(100),
+    alias_3 VARCHAR(100),
+    facebook VARCHAR(50),
+    twitter VARCHAR(16),
+    discord VARCHAR(14),
     website VARCHAR(255),
     language_1 VARCHAR(2) NOT NULL,
     language_2 VARCHAR(2),
-    language_3 VARCHAR(2)
+    language_3 VARCHAR(2),
+    CHECK (
+        (facebook IS NULL OR facebook LIKE '/%') AND
+        (twitter IS NULL OR twitter LIKE '@%') AND
+        (discord IS NULL OR discord LIKE '.gg/%') AND
+        (website IS NULL OR website LIKE 'http%')
+    ),
+    CHECK (alias_1 IS DISTINCT FROM alias_2 AND alias_1 IS DISTINCT FROM alias_3 AND alias_2 IS DISTINCT FROM alias_3),
+    CHECK (language_1 IS DISTINCT FROM language_2 AND language_1 IS DISTINCT FROM language_3 AND language_2 IS DISTINCT FROM language_3)
 );
 
 CREATE TABLE tl_groups_members (
     group_id INT NOT NULL,
     user_id INT,
-    name VARCHAR(255),
-    role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL DEFAULT 'Traductor/a'
+    member_name VARCHAR(50), -- In case the member isn't registered
+    member_role group_role NOT NULL DEFAULT 'Traductor/a'
 );
 
 CREATE TABLE tl_groups_updates (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     group_id INT NOT NULL,
     user_id INT NOT NULL,
     post_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    content TEXT NOT NULL,
+    content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
     hidden BOOLEAN NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0
 );
 
 -- ----- Translation Groups' History ----- --
 
+CREATE TYPE member_action AS ENUM('Añadido', 'Editado', 'Eliminado');
+
 CREATE TABLE tl_groups_alias_hist (
     group_id INT NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_1 VARCHAR(255),
-    old_2 VARCHAR(255),
-    old_3 VARCHAR(255),
-    new_1 VARCHAR(255),
-    new_2 VARCHAR(255),
-    new_3 VARCHAR(255)
+    old_1 VARCHAR(100),
+    old_2 VARCHAR(100),
+    old_3 VARCHAR(100),
+    new_1 VARCHAR(100),
+    new_2 VARCHAR(100),
+    new_3 VARCHAR(100)
 );
 
 CREATE TABLE tl_groups_members_hist (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    action ENUM('Añadido', 'Editado', 'Eliminado') NOT NULL,
+    action member_action NOT NULL,
     member_id INT,
-    member_name VARCHAR(255), -- In case the member is not registered
-    role ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a') NOT NULL
+    member_name VARCHAR(50), -- In case the member is not registered
+    role group_role
 );
 
 CREATE TABLE tl_groups_updates_hist (
     update_id INT NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_content TEXT,
-    new_content TEXT,
+    old_content TEXT NOT NULL CHECK (LENGTH(old_content) <= 1024),
+    new_content TEXT NOT NULL CHECK (LENGTH(new_content) <= 1024),
     hidden BOOLEAN,
     locked BOOLEAN
 );
@@ -218,7 +256,7 @@ CREATE TABLE tl_groups_moderation_logs (
     group_id INT NOT NULL,
     mod_id INT NOT NULL,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     locked BOOLEAN NOT NULL,
     hidden BOOLEAN NOT NULL
 );
@@ -227,7 +265,7 @@ CREATE TABLE tl_groups_moderation_logs (
 
 CREATE TABLE languages (
     lang_code VARCHAR(2) NOT NULL PRIMARY KEY,
-    lang_name VARCHAR(255) NOT NULL
+    lang_name VARCHAR(50) NOT NULL
 );
 
 -- ----- Posts ----- --
@@ -236,38 +274,47 @@ CREATE TABLE languages (
 -- You've been warned, I'm not joking.
 --
 
+CREATE TYPE post_classification AS ENUM('All ages', '13+', '16+', '18+');
+CREATE TYPE post_tl_type AS ENUM('Manual', 'MTL', 'MTL editado');
+CREATE TYPE post_status AS ENUM('En progreso', 'Completada', 'Pausada', 'Cancelada');
+CREATE TYPE post_tl_scope AS ENUM('Completa', 'Parcial');
+CREATE TYPE post_tl_platform AS ENUM('PC', 'Android', 'Otros');
+CREATE TYPE post_section AS ENUM('Traduciendo', 'Corrigiendo', 'Editando imágenes', 'Reinsertando', 'Testeando');
+
 CREATE TABLE posts (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     op_id INT NOT NULL,
     publish_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    original_lang VARCHAR(2) NOT NULL,
     translated_from VARCHAR(2) NOT NULL,
-    cover_image VARCHAR(255) NOT NULL,
-    title VARCHAR(255) NOT NULL, -- Title of the visual novel (in romaji/latin characters)
-    download_link VARCHAR(255) NOT NULL, -- Link to download the translation
-    download_note TEXT -- Note about the download link
+    cover_image VARCHAR(255) NOT NULL CHECK (cover_image LIKE 'https://...'),
+    title VARCHAR(100) NOT NULL, -- Title of the visual novel (in romaji/latin characters)
+    download_link VARCHAR(255) NOT NULL CHECK (download_link LIKE 'https://...'), -- Link to download the translation
+    download_note TEXT CHECK (LENGTH(download_note) <= 500) -- Note about the download link
 );
 
 CREATE TABLE posts_aliases (
     post_id INT NOT NULL,
-    alias VARCHAR(255) NOT NULL
+    alias VARCHAR(100) NOT NULL,
+    PRIMARY KEY (post_id, alias) -- To prevent Duplicates
 );
 
 CREATE TABLE posts_details (
     post_id INT NOT NULL,
-    sinopsis TEXT,
+    sinopsis TEXT NOT NULL CHECK (LENGTH(sinopsis) <= 500) DEFAULT 'Esta novela aún no tiene una sinopsis.',
     game_length SMALLINT,
-    classification ENUM('All ages', '13+', '16+', '18+') NOT NULL,
-    tl_type ENUM('Manual', 'MTL', 'MTL editado') NOT NULL,
-    tl_status ENUM('En progreso', 'Completada', 'Pausada', 'Cancelada') NOT NULL,
-    tl_scope ENUM('Completa', 'Parcial') NOT NULL,
-    tl_platform ENUM('PC', 'Android', 'Otros') NOT NULL,
-    buy_links JSON -- [{"plataforma": "Steam", "link": "https://..."}]
+    classification post_classification NOT NULL,
+    tl_type post_tl_type NOT NULL,
+    tl_status post_status NOT NULL,
+    tl_scope post_tl_scope NOT NULL,
+    tl_platform post_tl_platform NOT NULL,
+    buy_links JSON -- [{"plataform": "Steam", "link": "https://..."}]
 );
 
 CREATE TABLE posts_tl_progress (
     post_id INT NOT NULL,
-    tl_percentage SMALLINT NOT NULL,
-    tl_section ENUM('Traduciendo', 'Corrigiendo', 'Editando imágenes', 'Reinsertando', 'Testeando') NOT NULL
+    tl_percentage SMALLINT NOT NULL CHECK (tl_percentage BETWEEN 0 AND 100),
+    tl_section post_section NOT NULL
 );
 
 -- ----- Posts' length ----- --
@@ -278,7 +325,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     -- 3 = "Medio" (Entre 10 y 30 horas)
     -- 4 = "Largo" (Entre 30 y 50 horas)
     -- 5 = "Muy largo" (Más de 50 horas)
-    id SMALLINT PRIMARY KEY AUTO_INCREMENT,
+    id SMALLINT SERIAL PRIMARY KEY,
     length_name VARCHAR(255) NOT NULL
 );
 
@@ -287,12 +334,14 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
 
 -- ----- Comments ----- --
 
+CREATE TYPE comment_vote AS ENUM('Up', 'Down');
+
 CREATE TABLE comments (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     parent_id INT,
     post_id INT NOT NULL,
     user_id INT NOT NULL,
-    content TEXT NOT NULL,
+    content TEXT NOT NULL CHECK (LENGTH(content) <= 250),
     votes INT NOT NULL DEFAULT 0,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -300,7 +349,7 @@ CREATE TABLE comments (
 CREATE TABLE comments_votes (
     comment_id INT NOT NULL,
     user_id INT NOT NULL,
-    vote ENUM('Up', 'Down') NOT NULL,
+    vote comment_vote NOT NULL,
     PRIMARY KEY(comment_id, user_id)
 );
 
@@ -310,7 +359,7 @@ CREATE TABLE comments_moderation_logs (
     comment_id INT NOT NULL,
     mod_id INT NOT NULL,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     hidden BOOLEAN NOT NULL,
     locked BOOLEAN NOT NULL
 );
@@ -318,11 +367,11 @@ CREATE TABLE comments_moderation_logs (
 -- ----- Reviews ----- --
 
 CREATE TABLE reviews (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id INT SERIAL PRIMARY KEY,
     post_id INT NOT NULL,
     user_id INT NOT NULL,
-    content TEXT NOT NULL,
-    rating SMALLINT NOT NULL, -- 1 = "Utter bullsh*t" to 5 = "HOLY SH*T THIS IS AMAZING"
+    content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
+    rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5), -- 1 = "Utter bullsh*t" to 5 = "HOLY SH*T THIS IS AMAZING"
     votes INT NOT NULL DEFAULT 0,
     attachments JSON, -- ["https://...", "https://..."]
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -331,220 +380,153 @@ CREATE TABLE reviews (
 CREATE TABLE reviews_votes (
     review_id INT NOT NULL,
     user_id INT NOT NULL,
-    vote ENUM('Up', 'Down') NOT NULL
+    vote comment_vote NOT NULL
 );
 
 -- ----- Reviews' history ----- --
 
+CREATE TYPE review_attachment_action AS ENUM('Añadido', 'Eliminado');
+
 CREATE TABLE reviews_attachments_hist (
     review_id INT NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    action ENUM('Añadido', 'Eliminado') NOT NULL,
-    attachment VARCHAR(255) NOT NULL
+    action review_attachment_action NOT NULL,
+    attachment VARCHAR(255) NOT NULL CHECK (attachment LIKE 'https://...')
 );
 
 CREATE TABLE reviews_moderation_logs (
     review_id INT NOT NULL,
     mod_id INT NOT NULL,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reason TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     hidden BOOLEAN NOT NULL,
     locked BOOLEAN NOT NULL
 );
+
+-- ----------------- --
+--      Indexes      --
+-- ----------------- --
+--
+-- To make searches faster.
+-- 
+
+CREATE INDEX idx_entity_flags_reports ON entity_flags (reports);
+CREATE INDEX idx_comments_post_id ON comments (post_id);
+CREATE INDEX idx_notifications_user_id ON notifications (user_id);
+CREATE INDEX idx_posts_aliases_alias ON posts_aliases (alias);
+CREATE INDEX idx_tl_groups_metadata_aliases ON tl_groups_metadata (alias_1, alias_2, alias_3);
+CREATE INDEX idx_comments_parent_id ON comments (parent_id);
 
 
 -- ----------------- --
 --  Extra functions  --
 -- ----------------- --
 --
--- So uhh... MariaDB doesn't accept multiple CHECK constraints in a single column, so I had to do this.
--- Also, some things that need to be checked.
+-- Because we need them, after all.
 --
 
-DELIMITER //
-
--- ----- Users ----- --
--- Validating user socials handlers
-CREATE TRIGGER validate_user_socials
-BEFORE INSERT ON users_preferences
-FOR EACH ROW BEGIN
-    IF (NEW.twitter IS NOT NULL AND NEW.twitter NOT LIKE '@%') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tu handle de Twitter debe comenzar en "@".';
+-- ----- History ----- --
+CREATE OR REPLACE FUNCTION validate_parent_comment()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.parent_id IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM comments WHERE id = NEW.parent_id
+    ) THEN
+        RAISE EXCEPTION 'El comentario al que intentas responder no existe.';
     END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-    IF (NEW.discord IS NOT NULL AND NEW.discord NOT LIKE '@%') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tu handle de Discord debe comenzar en "@".';
-    END IF;
-END//
-
-
--- ----- Web Skins ----- --
--- Validating color format
-CREATE TRIGGER validate_web_color_schema
-BEFORE INSERT ON web_skins
-FOR EACH ROW BEGIN
-    IF NEW.primary_color NOT LIKE '#%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El color primario debe comenzar en "#".';
-    END IF;
-
-    IF NEW.secondary_color NOT LIKE '#%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El color secundario debe comenzar en "#".';
-    END IF;
-
-    IF NEW.accent_color NOT LIKE '#%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El color de acento debe comenzar en "#".';
-    END IF;
-
-    IF NEW.background_color NOT LIKE '#%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El color de fondo debe comenzar en "#".';
-    END IF;
-
-    IF NEW.text_color NOT LIKE '#%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El color de texto debe comenzar en "#".';
-    END IF;
-END//
-
-
--- ----- TL Groups ----- --
--- Validating social media handles and website links
-CREATE TRIGGER validate_group_socials
-BEFORE INSERT ON tl_groups_metadata
-FOR EACH ROW BEGIN
-    IF (NEW.facebook IS NOT NULL AND NEW.facebook NOT LIKE '/%') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tu handle de Facebook debe comenzar en "/".';
-    END IF;
-
-    IF (NEW.twitter IS NOT NULL AND NEW.twitter NOT LIKE '@%') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tu handle de Twitter debe comenzar en "@".';
-    END IF;
-
-    IF (NEW.discord IS NOT NULL AND NEW.discord NOT LIKE '.gg/%') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tu handle de Discord debe comenzar en ".gg/".';
-    END IF;
-
-    IF (NEW.website IS NOT NULL AND NEW.website NOT LIKE 'http%') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tu link de página web debe comenzar en "http" o "https".';
-    END IF;
-END//
-
-
--- Making sure aliases don't repeat themselves or another group has them as a name. (Aliases can be repeated, what we don't want is someone using an alias that's already being used by another group as their name)
-CREATE TRIGGER validate_group_aliases
-BEFORE INSERT ON tl_groups_metadata
-FOR EACH ROW BEGIN
-    IF NEW.alias_1 = NEW.alias_2 OR NEW.alias_1 = NEW.alias_3 OR NEW.alias_2 = NEW.alias_3 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Las alias del grupo no pueden ser iguales';
-    END IF;
-
-    IF (EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_1 OR latin_name = NEW.alias_1) AND id != NEW.group_id) OR
-        EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_2 OR latin_name = NEW.alias_2) AND id != NEW.group_id) OR
-        EXISTS (SELECT 1 FROM tl_groups WHERE (name = NEW.alias_3 OR latin_name = NEW.alias_3) AND id != NEW.group_id)) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Uno de los alias ya está siendo usado como nombre de otro grupo.';
-    END IF;
-END//
-
-
--- ----- Posts ----- --
--- Validating post information
-CREATE TRIGGER validate_post_info
-BEFORE INSERT ON posts
-FOR EACH ROW BEGIN
-    IF NEW.cover_image NOT LIKE 'http%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Link a imagen inválido.';
-    END IF;
-
-    IF NEW.download_link NOT LIKE 'http%' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Link de descarga inválido.';
-    END IF;
-END//
-
-
--- Validating posts aliases to prevent different visual novels having the same alias or name.
-CREATE TRIGGER validate_post_aliases
-BEFORE INSERT ON posts_aliases
-FOR EACH ROW BEGIN
-    IF (EXISTS (SELECT 1 FROM posts WHERE title = NEW.alias)) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El apodo que intentas agregar está siendo usado por otro post como el nombre de la novela.';
-    END IF;
-
-    IF (EXISTS (SELECT 1 FROM posts WHERE id != NEW.post_id AND id IN (SELECT post_id FROM posts_aliases WHERE alias = NEW.alias))) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El apodo que intentas agregar ya está siendo usado por otro post.';
-    END IF;
-END//
-
-
--- Validate post details
-CREATE TRIGGER validate_post_details
-BEFORE INSERT ON posts_details
-FOR EACH ROW BEGIN
-    IF NEW.sinopsis IS NULL THEN
-        SET NEW.sinopsis = 'Esta novela aún no tiene una sinopsis.';
-    END IF;
-    
-    IF NEW.classification NOT IN ('All ages', '13+', '16+', '18+') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La clasificación de edad no es válida.';
-    END IF;
-
-    IF NEW.tl_status NOT IN ('En progreso', 'Completada', 'Pausada', 'Cancelada') THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El estado de traducción no es válido.';
-    END IF;
-END//
-
-
--- Validate post translation progress
-CREATE TRIGGER validate_post_tl_progress
-BEFORE INSERT ON posts_tl_progress
-FOR EACH ROW BEGIN
-    IF NEW.tl_percentage < 0 OR NEW.tl_percentage > 100 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Porcentaje de traducción inválido.';
-    END IF;
-END//
-
-
--- ----- Comments ----- --
--- Validate parent comment
 CREATE TRIGGER validate_parent_comment
 BEFORE INSERT ON comments
-FOR EACH ROW BEGIN
-    IF NEW.parent_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM comments WHERE id = NEW.parent_id) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El comentario al que intentas responder no existe o fue eliminado.';
+FOR EACH ROW
+EXECUTE FUNCTION validate_parent_comment();
+
+
+-- ----- Verify post aliases ----- --
+CREATE OR REPLACE FUNCTION validate_post_aliases()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM posts p
+        LEFT JOIN posts_aliases pa ON pa.alias = NEW.alias
+        WHERE p.title = NEW.alias OR (pa.alias = NEW.alias AND pa.post_id != NEW.post_id)
+    ) THEN
+        RAISE EXCEPTION 'El alias ya está siendo usado.';
     END IF;
-END//
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER validate_post_aliases
+BEFORE INSERT ON posts_aliases
+FOR EACH ROW
+EXECUTE FUNCTION validate_post_aliases();
 
 
--- ----- Reviews ----- --
--- Validate reviews general info
-CREATE TRIGGER validate_review_info
-BEFORE INSERT ON reviews
-FOR EACH ROW BEGIN
-    IF NEW.rating < 1 OR NEW.rating > 5 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'La calificación debe estar entre 1 y 5.';
+-- ----- Report notifications ----- --
+CREATE OR REPLACE FUNCTION notify_reports(entity_id INT)
+RETURNS VOID AS $$
+DECLARE
+    role_ids INT[];
+    users_to_notify RECORD;
+BEGIN
+    SELECT ARRAY(SELECT id FROM roles WHERE role_name IN ('Dueño/a', 'Administrador/a', 'Moderador/a'))
+    INTO role_ids;
+
+    FOR users_to_notify IN 
+        SELECT DISTINCT ur.user_id
+        FROM users_role ur
+        WHERE ur.role_id = ANY(role_ids)
+    LOOP
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM notifications
+            WHERE user_id = users_to_notify.user_id
+              AND message = 'Un usuario ha alcanzado 5 reportes. Entidad ID: ' || entity_id
+        ) THEN
+            INSERT INTO notifications (user_id, message)
+            VALUES (
+                users_to_notify.user_id,
+                'Un usuario ha alcanzado 5 reportes. Entidad ID: ' || entity_id
+            );
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION check_and_notify_reports()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.reports = 5 THEN
+        PERFORM notify_reports(NEW.entity_id);
     END IF;
-END//
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-DELIMITER ;
+CREATE TRIGGER notify_on_five_reports
+AFTER UPDATE OF reports ON entity_flags
+FOR EACH ROW
+WHEN (NEW.reports = 5)
+EXECUTE FUNCTION check_and_notify_reports();
+
+
+-- ----- Prevent comments from having themselves as parents ----- --
+ALTER TABLE comments
+ADD CONSTRAINT check_parent_not_self
+CHECK (parent_id IS NULL OR parent_id != id);
+
+
+-- ----- Check user username and email ----- --
+ALTER TABLE users
+ADD CONSTRAINT chk_username_format CHECK (username ~* '^[a-zA-Z0-9._-]+$');
+ALTER TABLE users
+ADD CONSTRAINT chk_email_format CHECK (email ~* '^[^@]+@[^@]+\.[^@]+$');
+
 
 -- ----------------- --
 --   Foreign Keys    --
@@ -552,6 +534,9 @@ DELIMITER ;
 --
 -- Why, PHPMyAdmin? Why do you make me do this?
 --
+
+-- ----- Notifications ----- --
+ALTER TABLE notifications ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
 -- ----- History ----- --
 ALTER TABLE change_history ADD FOREIGN KEY (changed_by) REFERENCES users(id);
@@ -598,6 +583,7 @@ ALTER TABLE translations ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 
 -- ----- Posts ----- --
 ALTER TABLE posts ADD FOREIGN KEY (op_id) REFERENCES users(id);
+ALTER TABLE posts ADD FOREIGN KEY (original_lang) REFERENCES languages(lang_code);
 ALTER TABLE posts ADD FOREIGN KEY (translated_from) REFERENCES languages(lang_code);
 
 ALTER TABLE posts_aliases ADD FOREIGN KEY (post_id) REFERENCES posts(id);
