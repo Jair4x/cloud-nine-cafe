@@ -1,12 +1,16 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.0.1
+-- Version: 2.1.0
 -- Date: 2024-11-24
 -- ------------------------------------------------- --
+-- Changelog 2.1.0:
+-- - Added the "aliases" and "aliases_history" tables to store aliases for Posts and Groups and their histories.
+-- - Removed the "last_login" column from the "users" table since I never added it in the first place.
+-- - Fixed some enum values that had wrong names.
+--
 -- Changelog 2.0.1:
 -- - Added a missing check to the "posts" table.
--- - Added "last_login" date to the "users" table.
 -- - Changed the data type of "attachments" and "buy_links" to JSONB.
 --
 -- Changelog 2.0.0:
@@ -31,7 +35,8 @@ CREATE TABLE notifications (
 -- Most previously made history tables have been replaced by these ones to make management more efficient.
 
 CREATE TYPE e_type AS ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review');
-CREATE TYPE e_type2 AS ENUM('Post', 'Comment', 'Review', 'Group');
+CREATE TYPE e_type2 AS ENUM('Post', 'Comment', 'Review', 'TLGroup');
+CREATE TYPE e_type3 AS ENUM('Post', 'TLGroup');
 
 CREATE TABLE change_history (
     id INT SERIAL PRIMARY KEY,
@@ -61,6 +66,26 @@ CREATE TABLE entity_flags (
     locked BOOLEAN NOT NULL DEFAULT 0,
     reports SMALLINT NOT NULL DEFAULT 0 CHECK (reports >= 0),
     PRIMARY KEY (entity_type, entity_id)
+);
+
+-- ----- Aliases ----- --
+-- Made to store post and group aliases instead of having them as columns in the metadata or details of the entities.
+CREATE TYPE aliases_action AS ENUM('Añadido', 'Editado', 'Eliminado');
+
+CREATE TABLE aliases (
+    entity_type e_type3 NOT NULL,
+    entity_id INT NOT NULL,
+    alias VARCHAR(100) NOT NULL,
+    PRIMARY KEY (entity_type, entity_id, alias)
+);
+
+CREATE TABLE aliases_history (
+    entity_type e_type3 NOT NULL,
+    entity_id INT NOT NULL,
+    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_type aliases_action NOT NULL,
+    old_alias VARCHAR(100),
+    new_alias VARCHAR(100)
 );
 
 -- ----- Users ----- --
@@ -186,9 +211,6 @@ CREATE TABLE translations (
 
 CREATE TABLE tl_groups_metadata (
     group_id INT PRIMARY KEY,
-    alias_1 VARCHAR(100),
-    alias_2 VARCHAR(100),
-    alias_3 VARCHAR(100),
     facebook VARCHAR(50),
     twitter VARCHAR(16),
     discord VARCHAR(14),
@@ -202,7 +224,6 @@ CREATE TABLE tl_groups_metadata (
         (discord IS NULL OR discord LIKE '.gg/%') AND
         (website IS NULL OR website LIKE 'http%')
     ),
-    CHECK (alias_1 IS DISTINCT FROM alias_2 AND alias_1 IS DISTINCT FROM alias_3 AND alias_2 IS DISTINCT FROM alias_3),
     CHECK (language_1 IS DISTINCT FROM language_2 AND language_1 IS DISTINCT FROM language_3 AND language_2 IS DISTINCT FROM language_3)
 );
 
@@ -226,17 +247,6 @@ CREATE TABLE tl_groups_updates (
 -- ----- Translation Groups' History ----- --
 
 CREATE TYPE member_action AS ENUM('Añadido', 'Editado', 'Eliminado');
-
-CREATE TABLE tl_groups_alias_hist (
-    group_id INT NOT NULL,
-    change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_1 VARCHAR(100),
-    old_2 VARCHAR(100),
-    old_3 VARCHAR(100),
-    new_1 VARCHAR(100),
-    new_2 VARCHAR(100),
-    new_3 VARCHAR(100)
-);
 
 CREATE TABLE tl_groups_members_hist (
     group_id INT NOT NULL,
@@ -298,12 +308,6 @@ CREATE TABLE posts (
     download_note TEXT CHECK (LENGTH(download_note) <= 500) -- Note about the download link
 );
 
-CREATE TABLE posts_aliases (
-    post_id INT NOT NULL,
-    alias VARCHAR(100) NOT NULL,
-    PRIMARY KEY (post_id, alias) -- To prevent Duplicates
-);
-
 CREATE TABLE posts_details (
     post_id INT NOT NULL,
     sinopsis TEXT NOT NULL CHECK (LENGTH(sinopsis) <= 500) DEFAULT 'Esta novela aún no tiene una sinopsis.',
@@ -322,6 +326,9 @@ CREATE TABLE posts_tl_progress (
     tl_section post_section NOT NULL
 );
 
+-- ----- Posts' history ----- --
+-- This part has been now replaced by the change_history table.
+
 -- ----- Posts' length ----- --
 
 CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 hours), 5 = Very long (More than 50 hours)
@@ -333,9 +340,6 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     id SMALLINT SERIAL PRIMARY KEY,
     length_name VARCHAR(255) NOT NULL
 );
-
--- ----- Posts' history ----- --
--- This part has been now replaced by the change_history table.
 
 -- ----- Comments ----- --
 
@@ -390,12 +394,12 @@ CREATE TABLE reviews_votes (
 
 -- ----- Reviews' history ----- --
 
-CREATE TYPE review_attachment_action AS ENUM('Añadido', 'Eliminado');
+CREATE TYPE attachment_action AS ENUM('Añadido', 'Eliminado');
 
 CREATE TABLE reviews_attachments_hist (
     review_id INT NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    action review_attachment_action NOT NULL,
+    action attachment_action NOT NULL,
     attachment VARCHAR(255) NOT NULL CHECK (attachment LIKE 'https://...')
 );
 
@@ -421,6 +425,7 @@ CREATE INDEX idx_notifications_user_id ON notifications (user_id);
 CREATE INDEX idx_posts_aliases_alias ON posts_aliases (alias);
 CREATE INDEX idx_tl_groups_metadata_aliases ON tl_groups_metadata (alias_1, alias_2, alias_3);
 CREATE INDEX idx_comments_parent_id ON comments (parent_id);
+CREATE INDEX idx_aliases_alias ON aliases (alias);
 
 
 -- ----------------- --
