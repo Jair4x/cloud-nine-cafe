@@ -1,9 +1,14 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.0.0
--- Date: 2024-11-23
+-- Version: 2.0.1
+-- Date: 2024-11-24
 -- ------------------------------------------------- --
+-- Changelog 2.0.1:
+-- - Added a missing check to the "posts" table.
+-- - Added "last_login" date to the "users" table.
+-- - Changed the data type of "attachments" and "buy_links" to JSONB.
+--
 -- Changelog 2.0.0:
 -- - Updated everything from MariaDB to PostgreSQL.
 -- - Removed/changed all triggers and functions since we can now use PostgreSQL checks and stuff.
@@ -54,7 +59,7 @@ CREATE TABLE entity_flags (
     entity_id INT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT 0,
     locked BOOLEAN NOT NULL DEFAULT 0,
-    reports SMALLINT NOT NULL DEFAULT 0,
+    reports SMALLINT NOT NULL DEFAULT 0 CHECK (reports >= 0),
     PRIMARY KEY (entity_type, entity_id)
 );
 
@@ -288,7 +293,7 @@ CREATE TABLE posts (
     original_lang VARCHAR(2) NOT NULL,
     translated_from VARCHAR(2) NOT NULL,
     cover_image VARCHAR(255) NOT NULL CHECK (cover_image LIKE 'https://...'),
-    title VARCHAR(100) NOT NULL, -- Title of the visual novel (in romaji/latin characters)
+    title VARCHAR(100) UNIQUE NOT NULL,
     download_link VARCHAR(255) NOT NULL CHECK (download_link LIKE 'https://...'), -- Link to download the translation
     download_note TEXT CHECK (LENGTH(download_note) <= 500) -- Note about the download link
 );
@@ -308,7 +313,7 @@ CREATE TABLE posts_details (
     tl_status post_status NOT NULL,
     tl_scope post_tl_scope NOT NULL,
     tl_platform post_tl_platform NOT NULL,
-    buy_links JSON -- [{"plataform": "Steam", "link": "https://..."}]
+    buy_links JSONB -- [{"plataform": "Steam", "link": "https://..."}]
 );
 
 CREATE TABLE posts_tl_progress (
@@ -373,7 +378,7 @@ CREATE TABLE reviews (
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
     rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5), -- 1 = "Utter bullsh*t" to 5 = "HOLY SH*T THIS IS AMAZING"
     votes INT NOT NULL DEFAULT 0,
-    attachments JSON, -- ["https://...", "https://..."]
+    attachments JSONB, -- ["https://...", "https://..."]
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
