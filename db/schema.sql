@@ -1,9 +1,13 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.1.1
--- Date: 2024-11-25
+-- Version: 2.1.2
+-- Date: 2024-11-26
 -- ------------------------------------------------- --
+-- Changelog 2.1.2:
+-- - Missing data type for notifications(id) fixed.
+-- - Deleted a function that was not needed.
+--
 -- Changelog 2.1.1:
 -- - Changed all SERIAL columns to GENERATED ALWAYS AS IDENTITY.
 -- - Fixed default boolean values being set to 0 instead of FALSE.
@@ -24,7 +28,7 @@
 
 -- ----- Notifications ----- --
 CREATE TABLE notifications (
-    id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL,
     message TEXT NOT NULL CHECK (LENGTH(message) <= 200),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
