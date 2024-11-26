@@ -1,9 +1,13 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.1.0
--- Date: 2024-11-24
+-- Version: 2.1.1
+-- Date: 2024-11-25
 -- ------------------------------------------------- --
+-- Changelog 2.1.1:
+-- - Changed all SERIAL columns to GENERATED ALWAYS AS IDENTITY.
+-- - Fixed default boolean values being set to 0 instead of FALSE.
+--
 -- Changelog 2.1.0:
 -- - Added the "aliases" and "aliases_history" tables to store aliases for Posts and Groups and their histories.
 -- - Removed the "last_login" column from the "users" table since I never added it in the first place.
@@ -13,18 +17,14 @@
 -- - Added a missing check to the "posts" table.
 -- - Changed the data type of "attachments" and "buy_links" to JSONB.
 --
--- Changelog 2.0.0:
+-- Changelog 2.0.0 (A brief summary):
 -- - Updated everything from MariaDB to PostgreSQL.
--- - Removed/changed all triggers and functions since we can now use PostgreSQL checks and stuff.
--- - Added the "notification" tables for Moderation purposes as well as triggers and functions for them.
 -- - Added indexes to make search faster.
--- - Added the "original_lang" property to "posts".
--- - Added a LOT of checks to regulate data.
 
 
 -- ----- Notifications ----- --
 CREATE TABLE notifications (
-    id SERIAL PRIMARY KEY,
+    id GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL,
     message TEXT NOT NULL CHECK (LENGTH(message) <= 200),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -34,12 +34,13 @@ CREATE TABLE notifications (
 -- ----- History ----- --
 -- Most previously made history tables have been replaced by these ones to make management more efficient.
 
+-- Entity types
 CREATE TYPE e_type AS ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review');
 CREATE TYPE e_type2 AS ENUM('Post', 'Comment', 'Review', 'TLGroup');
 CREATE TYPE e_type3 AS ENUM('Post', 'TLGroup');
 
 CREATE TABLE change_history (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     entity_type e_type NOT NULL,
     entity_id INT NOT NULL, -- Affected Entity ID
     field_changed VARCHAR(255) NOT NULL,
@@ -62,8 +63,8 @@ CREATE TABLE report_history (
 CREATE TABLE entity_flags (
     entity_type e_type2 NOT NULL,
     entity_id INT NOT NULL,
-    hidden BOOLEAN NOT NULL DEFAULT 0,
-    locked BOOLEAN NOT NULL DEFAULT 0,
+    hidden BOOLEAN NOT NULL DEFAULT FALSE,
+    locked BOOLEAN NOT NULL DEFAULT FALSE,
     reports SMALLINT NOT NULL DEFAULT 0 CHECK (reports >= 0),
     PRIMARY KEY (entity_type, entity_id)
 );
@@ -93,11 +94,11 @@ CREATE TABLE aliases_history (
 CREATE TYPE user_status AS ENUM('Activo', 'Desactivado', 'Muteado', 'Baneado');
 
 CREATE TABLE users (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     email VARCHAR(128) UNIQUE NOT NULL,
-    is_email_verified BOOLEAN NOT NULL DEFAULT 0,
+    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     avatar VARCHAR(255) NOT NULL,
     status user_status NOT NULL DEFAULT 'Activo',
     password TEXT NOT NULL, -- This will be obviously hashed and salted, so if you're going to try and hack this, good luck!
@@ -107,11 +108,11 @@ CREATE TABLE users (
 CREATE TABLE users_preferences (
     user_id INT PRIMARY KEY,
     bio TEXT CHECK (LENGTH(bio) <= 250),
-    bio_hidden BOOLEAN NOT NULL DEFAULT 0,
+    bio_hidden BOOLEAN NOT NULL DEFAULT FALSE,
     twitter VARCHAR(16),
-    twitter_hidden BOOLEAN NOT NULL DEFAULT 0,
+    twitter_hidden BOOLEAN NOT NULL DEFAULT FALSE,
     discord VARCHAR(14),
-    discord_hidden BOOLEAN NOT NULL DEFAULT 0,
+    discord_hidden BOOLEAN NOT NULL DEFAULT FALSE,
     web_skin SMALLINT NOT NULL DEFAULT 1,
     CHECK (twitter IS NULL OR twitter LIKE '@%'),
     CHECK (discord IS NULL OR discord LIKE '.gg/%')
@@ -153,7 +154,7 @@ CREATE TABLE user_sessions (
 -- ----- Web Skins ----- --
 
 CREATE TABLE web_skins (
-    id SMALLINT SERIAL PRIMARY KEY,
+    id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     skin_name VARCHAR(30) NOT NULL,
     primary_color VARCHAR(7) NOT NULL,
     secondary_color VARCHAR(7) NOT NULL,
@@ -170,7 +171,7 @@ CREATE TABLE web_skins (
 -- ----- Roles ----- --
 
 CREATE TABLE roles (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     role_name VARCHAR(255) NOT NULL
 );
 
@@ -185,7 +186,7 @@ CREATE TABLE roles_perms (
 --
 
 CREATE TABLE perms (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     perm_name VARCHAR(255) NOT NULL
 );
 
@@ -195,7 +196,7 @@ CREATE TYPE group_status AS ENUM('Activo', 'Q.E.P.D');
 CREATE TYPE group_role AS ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a', 'Traductor/a', 'Programador/a');
 
 CREATE TABLE tl_groups (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     owner_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     latin_name VARCHAR(100) NOT NULL, -- In case the name uses non-latin characters, This will be the "main name".
@@ -204,7 +205,7 @@ CREATE TABLE tl_groups (
 );
 
 CREATE TABLE translations (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     post_id INT NOT NULL,
     group_id INT NOT NULL
 );
@@ -235,13 +236,13 @@ CREATE TABLE tl_groups_members (
 );
 
 CREATE TABLE tl_groups_updates (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     group_id INT NOT NULL,
     user_id INT NOT NULL,
     post_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
-    hidden BOOLEAN NOT NULL DEFAULT 0,
-    locked BOOLEAN NOT NULL DEFAULT 0
+    hidden BOOLEAN NOT NULL DEFAULT FALSE,
+    locked BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- ----- Translation Groups' History ----- --
@@ -297,7 +298,7 @@ CREATE TYPE post_tl_platform AS ENUM('PC', 'Android', 'Otros');
 CREATE TYPE post_section AS ENUM('Traduciendo', 'Corrigiendo', 'Editando imágenes', 'Reinsertando', 'Testeando');
 
 CREATE TABLE posts (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     op_id INT NOT NULL,
     publish_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     original_lang VARCHAR(2) NOT NULL,
@@ -337,7 +338,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
     -- 3 = "Medio" (Entre 10 y 30 horas)
     -- 4 = "Largo" (Entre 30 y 50 horas)
     -- 5 = "Muy largo" (Más de 50 horas)
-    id SMALLINT SERIAL PRIMARY KEY,
+    id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     length_name VARCHAR(255) NOT NULL
 );
 
@@ -346,7 +347,7 @@ CREATE TABLE game_length ( -- For now, it's 1 - 5. 1 = Very short (Less than 2 h
 CREATE TYPE comment_vote AS ENUM('Up', 'Down');
 
 CREATE TABLE comments (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     parent_id INT,
     post_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -376,7 +377,7 @@ CREATE TABLE comments_moderation_logs (
 -- ----- Reviews ----- --
 
 CREATE TABLE reviews (
-    id INT SERIAL PRIMARY KEY,
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     post_id INT NOT NULL,
     user_id INT NOT NULL,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
@@ -421,9 +422,6 @@ CREATE TABLE reviews_moderation_logs (
 
 CREATE INDEX idx_entity_flags_reports ON entity_flags (reports);
 CREATE INDEX idx_comments_post_id ON comments (post_id);
-CREATE INDEX idx_notifications_user_id ON notifications (user_id);
-CREATE INDEX idx_posts_aliases_alias ON posts_aliases (alias);
-CREATE INDEX idx_tl_groups_metadata_aliases ON tl_groups_metadata (alias_1, alias_2, alias_3);
 CREATE INDEX idx_comments_parent_id ON comments (parent_id);
 CREATE INDEX idx_aliases_alias ON aliases (alias);
 
@@ -546,7 +544,7 @@ ADD CONSTRAINT chk_email_format CHECK (email ~* '^[^@]+@[^@]+\.[^@]+$');
 --
 
 -- ----- Notifications ----- --
-ALTER TABLE notifications ADD FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE notifications ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- ----- History ----- --
 ALTER TABLE change_history ADD FOREIGN KEY (changed_by) REFERENCES users(id);
@@ -595,8 +593,6 @@ ALTER TABLE translations ADD FOREIGN KEY (group_id) REFERENCES tl_groups(id);
 ALTER TABLE posts ADD FOREIGN KEY (op_id) REFERENCES users(id);
 ALTER TABLE posts ADD FOREIGN KEY (original_lang) REFERENCES languages(lang_code);
 ALTER TABLE posts ADD FOREIGN KEY (translated_from) REFERENCES languages(lang_code);
-
-ALTER TABLE posts_aliases ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 
 ALTER TABLE posts_details ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 ALTER TABLE posts_details ADD FOREIGN KEY (game_length) REFERENCES game_length(id);
