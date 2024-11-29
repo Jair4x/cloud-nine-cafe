@@ -1,5 +1,6 @@
 # Base de Datos / Database
-V2.0.0
+
+V2.2.0
 
 # Español
 
@@ -13,6 +14,7 @@ Antes de nada, vamos a aclarar un par de cosas que seguro deberías saber:
 2. En las APIs, la base de datos será manejada mediante Sequelize, una librería ORM (Object-Relational Mapping). ¿No sabes lo que es? Yo tampoco, pero sirve para manejar bases de datos mediante código. 👍
 
 ## Modelos
+
 **Nota**: Cada modelo tiene una propiedad `hidden` y una propiedad `locked`, las cuales son inspiradas en el schema oficial de VNDB, que usa estas propiedades.
 
 Moderación/Aprobación pendiente:
@@ -33,13 +35,24 @@ Normal (accesible por todos):
 
 ### Notificaciones (notifications)
 
-Modelo creado
+Modelo creado para poder enviar notificaciones de importancia a los usuarios. Especialmente para moderación.
+
+**Tabla**
+
+```
+id - int
+user_id - int (de la tabla users) -- El que recibe las notificaciones
+message - text
+created_at - date
+read - boolean
+```
 
 ### Historiales y Flags
 
 En lugar de tener tablas redundantes como extra de cada modelo, se hizo un modelo específico para el manejo de los historiales y las flags de una entidad.
 
 **Tablas**
+
 ```
 change_history:
 id - int
@@ -66,16 +79,16 @@ locked - boolean
 reports - smallint -- No sé si voy a dejar esto, realmente. Es algo que probablemente pueda buscar con una consulta a report_history, pero por ahora dejémoslo ahí.
 ```
 
-
 ### Usuarios (users)
 
 Cada usuario tiene un perfil, cuyo URL base es `/u{ID}`.
-*(Por ejemplo: `cafecloudnine.com/u420`*)
+_(Por ejemplo: `cafecloudnine.com/u420`_)
 
-`/u{ID}/preferences`  es la página de configuración del usuario y solo puede ser accedido por el dueño de la cuenta con ese ID.
+`/u{ID}/preferences` es la página de configuración del usuario y solo puede ser accedido por el dueño de la cuenta con ese ID.
 Las secciones de las preferencias serán puestas como `/u{ID}/preferences?s={section}`.
 
 **Tablas**
+
 ```
 users:
 id - int
@@ -105,6 +118,7 @@ role_id - int (de la tabla roles)
 ```
 
 **Historiales específicos**
+
 ```
 user_password_hist:
 user_id - int (de la tabla users)
@@ -124,11 +138,14 @@ action_date - date
 Este proyecto manejará JWT (Json Web Tokens), si no sabes lo que son, puedes ser feliz.
 
 **Tabla**
+
 ```
 users_sessions:
+id - int
 user_id - int (de la tabla users)
-session_id - text
+refresh_token - text -- hasheado, por supuesto.
 expires - date
+version_number - int
 ```
 
 #### Skins de Página (web_skins)
@@ -137,6 +154,7 @@ La página tendrá algunos esquemas de colores que el usuario puede elegir al us
 Es del lado del cliente, así que los demás no sabrán qué esquema de colores usas.
 
 **Tabla**
+
 ```
 web_skins:
 id - int
@@ -153,6 +171,7 @@ text_color - varchar (debe verse como `#rrggbb`)
 Es bastante obvio que la plataforma va a necesitar moderación y otras cosas para prevenir cosas que no queremos que pasen, así que agregaremos roles.
 
 **Tablas**
+
 ```
 roles:
 id - int
@@ -168,6 +187,7 @@ perm_id - int (de la tabla perms)
 Si tenemos roles, necesitamos permisos, sin ellos, la plataforma probablemente sería un desastre.
 
 **Tabla**
+
 ```
 perms:
 id - int
@@ -177,12 +197,13 @@ perm_name - varchar
 ### Grupos de Traducción (tl_groups)
 
 Cada grupo tiene un perfil, cuyo URL base es `/g{ID}`.
-*(Por ejemplo: `cafecloudnine.com/g69`*)
+_(Por ejemplo: `cafecloudnine.com/g69`_)
 
 Sin embargo, las mismas tienen un apartado `g{ID}/config` que contiene la configuración del grupo como los aliases, los idiomas que traducen o los miembros del grupo.
 La misma, al igual que con los usuarios, tiene un apartado `g{ID}/config?s={section}`, donde estará la configuración de la sección en específico.
 
 **Tablas**
+
 ```
 tl_groups:
 id - int
@@ -228,6 +249,7 @@ locked - boolean
 ```
 
 **Historiales específicos**
+
 ```
 tl_groups_alias_hist:
 group_id - int (de la tabla tl_groups)
@@ -270,6 +292,7 @@ hidden - boolean
 Para organizar los lenguajes para futuras actualizaciones.
 
 **Tabla**
+
 ```
 languages:
 lang_code - varchar
@@ -277,6 +300,7 @@ lang_name - varchar
 ```
 
 ##### Largo de la novela (game_length)
+
 Por ahora, el largo de las novelas se miden en 5 valores:
 
 1 = "Muy corto" (Menos de 2 horas)
@@ -286,6 +310,7 @@ Por ahora, el largo de las novelas se miden en 5 valores:
 5 = "Muy largo" (Más de 50 horas)
 
 **Tabla**
+
 ```
 game_length:
 id - int
@@ -298,6 +323,7 @@ URL base: `/p{ID}`.
 Ejemplo: `cafecloudnine.com/p321`
 
 **Tablas**
+
 ```
 posts:
 id - int
@@ -331,6 +357,7 @@ tl_section - enum -- "Traduciendo", "Corrigiendo", "Corrigiendo", "Reinsertando"
 ```
 
 **Historiales específicos**
+
 ```
 No hay.
 ```
@@ -338,13 +365,15 @@ No hay.
 ### Comentarios (comments)
 
 Estos pueden estar dentro de:
-- Posts
-- Reseñas
-- Actualizaciones de grupos
-URL base: `/p{ID]/c{ID]`
-Ejemplo: `cafecloudnine.com/p420/c69`
+
+-   Posts
+-   Reseñas
+-   Actualizaciones de grupos
+    URL base: `/p{ID]/c{ID]`
+    Ejemplo: `cafecloudnine.com/p420/c69`
 
 **Tablas**
+
 ```
 comments:
 id - int
@@ -362,6 +391,7 @@ vote - enum -- "Up" o "Down"
 ```
 
 **Historiales específicos**
+
 ```
 comments_moderation_logs:
 comment_id - int (de la tabla comments)
@@ -379,6 +409,7 @@ URL base: `/p{ID}/r{ID}`
 Ejemplo: `cafecloudnine.com/p69/r420`
 
 **Tablas**
+
 ```
 reviews:
 id - int
@@ -397,6 +428,7 @@ vote - enum -- "Up" o "Down"
 ```
 
 **Historiales específicos**
+
 ```
 reviews_attachments_hist:
 review_id - int (de la tabla reviews)
@@ -446,11 +478,26 @@ Normal (accessible by anyone):
 `hidden` = false
 `locked` = false
 
+### Notifications (notifications)
+
+Model created to notify users of important things. Mostly created for moderation purposes.
+
+**Table**
+
+```
+id - int
+user_id - int (from the users table) -- The one that receives the notification.
+message - text
+created_at - date
+read - boolean
+```
+
 ### Histories and Flags
 
 Instead of making a lot of tables as an extra in each model, a specific model was made to manage an entity's history and flags.
 
 **Tables**
+
 ```
 change_history:
 id - int
@@ -477,7 +524,6 @@ locked - boolean
 reports - smallint -- I don't know if I'll leave this, really. It's something that can probably be obtained by a query to the report_history table, but for now, let's leave it as is.
 ```
 
-
 ### Users (users)
 
 Users have some details that I'll explain here.
@@ -489,6 +535,7 @@ _(Example: `cafecloudnine.com/u420`)_
 The same goes for the subroutes `/u{ID}/preferences?s={section}`.
 
 **Tables**
+
 ```
 users:
 id - int
@@ -518,18 +565,34 @@ role_id - int (from the roles table)
 ```
 
 **Specific History tables**
+
 ```
 user_password_hist:
-user_id - int (de la tabla users)
+user_id - int (from the users table)
 change_date - date
 
 users_moderation_logs:
-user_id - int (de la tabla users)
-mod_id - int (de la tabla users)
+user_id - int (from the users table)
+mod_id - int (from the users table)
 mod_action - enum
 reason - text
 until - date -- In case of mutes or temporary bans
 action_date - date
+```
+
+### Sessions (sessions)
+
+This project uses JWT (Json Web Tokens, it's pronounced "jot" not J-W-T btw) for sessions. If you don't know what that is, you're probably happy.
+
+**Table**
+
+```
+users_sessions:
+id - int
+user_id - int (from the users table)
+refresh_token - text -- hashed, of course.
+expires - date
+version_number - int
 ```
 
 #### Website Skins (web_skins)
@@ -538,6 +601,7 @@ The website will have some color schemes the user can choose when using the plat
 This is client-side, so the others won't know what color scheme you use.
 
 **Table**
+
 ```
 web_skins:
 id - int
@@ -554,6 +618,7 @@ text_color - varchar (must look like `#rrggbb`)
 It's fairly obvious that the platform will need moderation and other stuff to prevent things we don't want to happen, so we'll add roles.
 
 **Tables**
+
 ```
 roles:
 id - int
@@ -569,6 +634,7 @@ perm_id - int (from perms table)
 If we have roles, we need permissions, without them, the platform would probably be a disaster.
 
 **Table**
+
 ```
 perms:
 id - int
@@ -578,12 +644,13 @@ name - varchar
 ### Translation Groups (tl_groups)
 
 Every group has a profile, whose base URL is `/g{ID}`.
-*(For example: `cafecloudnine.com/g69`*)
+_(For example: `cafecloudnine.com/g69`_)
 
 However, the groups have a section `g{ID}/config` that has config for the group, such as the aliases, the languages they translate from and the group members.
 Same as the users, it has subroutes from `g{ID}/config?s={section}`, where a specific section is located.
 
 **Tables**
+
 ```
 tl_groups:
 id - int
@@ -630,6 +697,7 @@ locked - boolean
 ```
 
 **Specific Histories**
+
 ```
 tl_groups_alias_hist:
 group_id - int (from tl_groups table)
@@ -672,6 +740,7 @@ hidden - boolean
 Languages for posts and groups.
 
 **Tables**
+
 ```
 languages:
 id - int
@@ -679,6 +748,7 @@ name - varchar
 ```
 
 ##### Novel's length (game_length)
+
 For now, the length of a novel is measured in 5 values:
 
 1 = "Very short" (Less than 2 hours)
@@ -686,6 +756,7 @@ For now, the length of a novel is measured in 5 values:
 3 = "Medium" (Between 10 and 30 hours)
 4 = "Long" (Between 30 and 50 hours)
 5 = "Very long" (More than 50 hours)
+
 ```
 game_length:
 id - int
@@ -698,6 +769,7 @@ Base URL: `/p{ID]`
 Example: `cafecloudnine.com/p420`
 
 **Tables**
+
 ```
 posts:
 id - int
@@ -731,6 +803,7 @@ tl_section - enum -- "Translating", "Editing", "Images and Menu", "Reinserting" 
 ```
 
 **Specific Histories**
+
 ```
 There isn't.
 ```
@@ -738,13 +811,15 @@ There isn't.
 ### Comments (comments)
 
 These can be inside:
-- Posts
-- Reviews
-- Group updates
-Base URL: `/{p/u/r}{ID}/c{ID]`
-Examples: `cafecloudnine.com/p420/c69`, `cafecloudnine.com/u42/c70`
+
+-   Posts
+-   Reviews
+-   Group updates
+    Base URL: `/{p/u/r}{ID}/c{ID]`
+    Examples: `cafecloudnine.com/p420/c69`, `cafecloudnine.com/u42/c70`
 
 **Tables**
+
 ```
 comments:
 id - int
@@ -762,6 +837,7 @@ vote - enum -- "Up" or "Down"
 ```
 
 **Specific Histories**
+
 ```
 comments_moderation_logs:
 comment_id - int (from comments table)
@@ -779,6 +855,7 @@ Base URL: `/p{ID}/r{ID}`
 Example: `cafecloudnine.com/p69/r420`
 
 **Tables**
+
 ```
 reviews:
 id - int
@@ -795,6 +872,7 @@ vote - enum -- "Up" or "Down"
 ```
 
 **Specific Histories**
+
 ```
 reviews_attachments_hist:
 review_id - int (from reviews table)
