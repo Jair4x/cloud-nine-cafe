@@ -142,8 +142,7 @@ CREATE TABLE users_moderation_logs (
 -- How did I even forget this until now?
 
 CREATE TABLE user_sessions (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    session_id VARCHAR(255) UNIQUE NOT NULL,
+    session_id VARCHAR(255) PRIMARY KEY,
     user_id INT NOT NULL,
     token TEXT NOT NULL,
     device_info VARCHAR(255) NOT NULL,
