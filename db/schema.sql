@@ -1,9 +1,12 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.1.2
--- Date: 2024-11-26
+-- Version: 2.2.0
+-- Date: 2024-11-29
 -- ------------------------------------------------- --
+-- Changelog 2.2.0:
+-- - Changed the "users_sessions" table to match JWT usage.
+--
 -- Changelog 2.1.2:
 -- - Missing data type for notifications(id) fixed.
 -- - Deleted a function that was not needed.
@@ -16,14 +19,6 @@
 -- - Added the "aliases" and "aliases_history" tables to store aliases for Posts and Groups and their histories.
 -- - Removed the "last_login" column from the "users" table since I never added it in the first place.
 -- - Fixed some enum values that had wrong names.
---
--- Changelog 2.0.1:
--- - Added a missing check to the "posts" table.
--- - Changed the data type of "attachments" and "buy_links" to JSONB.
---
--- Changelog 2.0.0 (A brief summary):
--- - Updated everything from MariaDB to PostgreSQL.
--- - Added indexes to make search faster.
 
 
 -- ----- Notifications ----- --
@@ -149,9 +144,11 @@ CREATE TABLE users_moderation_logs (
 -- How did I even forget this until now?
 
 CREATE TABLE user_sessions (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id INT NOT NULL,
-    session_id TEXT NOT NULL,
-    expires TIMESTAMP NULL
+    refresh_token TEXT NOT NULL,
+    expires TIMESTAMP NULL,
+    version_number INT NOT NULL
 );
 
 
