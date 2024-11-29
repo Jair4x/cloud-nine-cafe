@@ -1,11 +1,14 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.2.0
+-- Version: 2.2.1
 -- Date: 2024-11-29
 -- ------------------------------------------------- --
+-- Changelog 2.2.1:
+-- - Forgor to add more data to "user_sessions". ☠️
+--
 -- Changelog 2.2.0:
--- - Changed the "users_sessions" table to match JWT usage.
+-- - Changed the "user_sessions" table to match JWT usage.
 --
 -- Changelog 2.1.2:
 -- - Missing data type for notifications(id) fixed.
@@ -14,11 +17,6 @@
 -- Changelog 2.1.1:
 -- - Changed all SERIAL columns to GENERATED ALWAYS AS IDENTITY.
 -- - Fixed default boolean values being set to 0 instead of FALSE.
---
--- Changelog 2.1.0:
--- - Added the "aliases" and "aliases_history" tables to store aliases for Posts and Groups and their histories.
--- - Removed the "last_login" column from the "users" table since I never added it in the first place.
--- - Fixed some enum values that had wrong names.
 
 
 -- ----- Notifications ----- --
@@ -145,10 +143,13 @@ CREATE TABLE users_moderation_logs (
 
 CREATE TABLE user_sessions (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    session_id VARCHAR(255) UNIQUE NOT NULL,
     user_id INT NOT NULL,
-    refresh_token TEXT NOT NULL,
-    expires TIMESTAMP NULL,
-    version_number INT NOT NULL
+    token TEXT NOT NULL,
+    device_info VARCHAR(255) NOT NULL,
+    version_number INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL,
 );
 
 
