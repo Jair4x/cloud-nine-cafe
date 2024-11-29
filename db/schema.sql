@@ -1,22 +1,11 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.2.1
+-- Version: 2.2.2
 -- Date: 2024-11-29
 -- ------------------------------------------------- --
--- Changelog 2.2.1:
--- - Forgor to add more data to "user_sessions". ☠️
---
--- Changelog 2.2.0:
--- - Changed the "user_sessions" table to match JWT usage.
---
--- Changelog 2.1.2:
--- - Missing data type for notifications(id) fixed.
--- - Deleted a function that was not needed.
---
--- Changelog 2.1.1:
--- - Changed all SERIAL columns to GENERATED ALWAYS AS IDENTITY.
--- - Fixed default boolean values being set to 0 instead of FALSE.
+-- Changelog 2.2.2:
+-- - Changed the table "user_sessions" to use JSONB instead of VARCHAR for "device_info".
 
 
 -- ----- Notifications ----- --
@@ -145,7 +134,7 @@ CREATE TABLE user_sessions (
     session_id VARCHAR(255) PRIMARY KEY,
     user_id INT NOT NULL,
     token TEXT NOT NULL,
-    device_info VARCHAR(255) NOT NULL,
+    device_info JSONB NOT NULL,
     version_number INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NULL,
