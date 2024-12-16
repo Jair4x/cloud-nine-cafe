@@ -1,17 +1,21 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 2.2.2
--- Date: 2024-11-29
+-- Version: 3.0.0
+-- Date: 2024-12-15
 -- ------------------------------------------------- --
--- Changelog 2.2.2:
--- - Changed the table "user_sessions" to use JSONB instead of VARCHAR for "device_info".
+-- Changelog 3.0.0:
+-- - Adapted JWT session system to be managed by SuperTokens. They manage their own tables so we don't need some of them anymore.
+-- - Removed the following tables:
+--   - user_sessions
+-- - Edited the following tables:
+--   - users -> users_profile
 
 
 -- ----- Notifications ----- --
 CREATE TABLE notifications (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     message TEXT NOT NULL CHECK (LENGTH(message) <= 200),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read BOOLEAN DEFAULT FALSE
@@ -79,20 +83,17 @@ CREATE TABLE aliases_history (
 
 CREATE TYPE user_status AS ENUM('Activo', 'Desactivado', 'Muteado', 'Baneado');
 
-CREATE TABLE users (
-    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+CREATE TABLE users_profile (
+    user_id UUID PRIMARY KEY REFERENCES emailpassword_users(user_id),
     username VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
-    email VARCHAR(128) UNIQUE NOT NULL,
-    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     avatar VARCHAR(255) NOT NULL,
     status user_status NOT NULL DEFAULT 'Activo',
-    password TEXT NOT NULL, -- This will be obviously hashed and salted, so if you're going to try and hack this, good luck!
     registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users_preferences (
-    user_id INT PRIMARY KEY,
+    user_id UUID PRIMARY KEY,
     bio TEXT CHECK (LENGTH(bio) <= 250),
     bio_hidden BOOLEAN NOT NULL DEFAULT FALSE,
     twitter VARCHAR(16),
@@ -105,7 +106,7 @@ CREATE TABLE users_preferences (
 );
 
 CREATE TABLE users_role (
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     role_id INT NOT NULL
 );
 
@@ -114,12 +115,12 @@ CREATE TABLE users_role (
 CREATE TYPE mod_action AS ENUM('Ban', 'Mute');
 
 CREATE TABLE users_password_hist (
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users_moderation_logs (
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     mod_id INT NOT NULL,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action mod_action NOT NULL,
@@ -132,7 +133,7 @@ CREATE TABLE users_moderation_logs (
 
 CREATE TABLE user_sessions (
     session_id VARCHAR(255) PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     token TEXT NOT NULL,
     device_info JSONB NOT NULL,
     version_number INT NOT NULL,
@@ -220,7 +221,7 @@ CREATE TABLE tl_groups_metadata (
 
 CREATE TABLE tl_groups_members (
     group_id INT NOT NULL,
-    user_id INT,
+    user_id UUID,
     member_name VARCHAR(50), -- In case the member isn't registered
     member_role group_role NOT NULL DEFAULT 'Traductor/a'
 );
@@ -228,7 +229,7 @@ CREATE TABLE tl_groups_members (
 CREATE TABLE tl_groups_updates (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     group_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     post_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
     hidden BOOLEAN NOT NULL DEFAULT FALSE,
@@ -241,7 +242,7 @@ CREATE TYPE member_action AS ENUM('Añadido', 'Editado', 'Eliminado');
 
 CREATE TABLE tl_groups_members_hist (
     group_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action member_action NOT NULL,
     member_id INT,
@@ -340,7 +341,7 @@ CREATE TABLE comments (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     parent_id INT,
     post_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 250),
     votes INT NOT NULL DEFAULT 0,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -348,7 +349,7 @@ CREATE TABLE comments (
 
 CREATE TABLE comments_votes (
     comment_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     vote comment_vote NOT NULL,
     PRIMARY KEY(comment_id, user_id)
 );
@@ -369,7 +370,7 @@ CREATE TABLE comments_moderation_logs (
 CREATE TABLE reviews (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     post_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
     rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5), -- 1 = "Utter bullsh*t" to 5 = "HOLY SH*T THIS IS AMAZING"
     votes INT NOT NULL DEFAULT 0,
@@ -379,7 +380,7 @@ CREATE TABLE reviews (
 
 CREATE TABLE reviews_votes (
     review_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     vote comment_vote NOT NULL
 );
 
