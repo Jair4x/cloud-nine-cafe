@@ -84,12 +84,3 @@ INSERT INTO languages (lang_name, lang_code) VALUES
 ('Italiano', 'it'),
 ('Portugués', 'pt'),
 ('Ruso', 'ru');
-
--- ----- Game Length ----- --
-INSERT INTO game_length (length_name) VALUES
-('Muy corto (Menos de 2 horas)'),
-('Corto (2 a 10 horas)'),
-('Medio (10 a 30 horas)'),
-('Largo (30 a 50 horas)'),
-('Muy largo (Más de 50 horas)'),
-('Desconocido');
