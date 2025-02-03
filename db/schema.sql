@@ -1,11 +1,9 @@
 -- ------------------------------------------------- --
 --  Cloud Nine Café - Comunidad de Novelas Visuales  --
 -- ------------------------------------------------- --
--- Version: 3.0.0
--- Date: 2025-02-01
+-- Version: 3.0.1
+-- Date: 2025-02-03
 -- ------------------------------------------------- --
--- Changelog:
--- - Changelogs are now in the commit messages. Refer to that if you need to know what changed.
 
 -- ----- Notifications ----- --
 CREATE TABLE notifications (
@@ -96,6 +94,14 @@ CREATE TABLE user_preferences (
     CHECK (discord IS NULL OR discord LIKE '.gg/%')
 );
 
+-- ----- Users' Social Logins ----- --
+CREATE TABLE user_social_logins (
+  user_id UUID REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+  provider VARCHAR(20) NOT NULL, -- 'discord', 'google', 'facebook'
+  provider_user_id VARCHAR(255) NOT NULL,
+  PRIMARY KEY (user_id, provider)
+);
+
 -- ----- Users' Roles ----- --
 CREATE TABLE roles (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -106,6 +112,13 @@ CREATE TABLE user_role (
     user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
     role_id INT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, role_id)
+);
+
+-- ----- Users' Sessions ----- --
+CREATE TABLE user_sessions (
+  user_id UUID REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+  session_handle VARCHAR(255) PRIMARY KEY,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ----- Users' History ----- --
