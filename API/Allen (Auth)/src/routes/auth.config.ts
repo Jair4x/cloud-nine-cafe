@@ -33,7 +33,7 @@ app.use(
 
                     const isEmail = identifier.includes("@");
 
-                    const pwHash = secureHash(credentials.password);
+                    const pwHash = await secureHash(credentials.password);
 
                     if (isEmail) {
                         user = await db.select().from("users").where({ email: identifier, password: pwHash }).first();
