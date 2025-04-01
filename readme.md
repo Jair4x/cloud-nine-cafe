@@ -1,40 +1,61 @@
-Cloud Nine Café 
-=====
+# Cloud Nine Café
 
-### ![Logo](./public/logo.png)
----------
-##### [English](#english) / [Español](#Español)
+---
 
-Español
----------
+##### [English](#english)
+
+## Español
 
 ### ¿Qué es esto?
+
 Un repositorio que contiene todo el código fuente y documentación de la página de Cloud Nine Café: [cafecloudnine.com](https://cafecloudnine.com).
 
 Cloud Nine Café es una comunidad hispanohablante dedicada a las Novelas Visuales y sus traducciones.
 
 ### Contenidos de este repositorio
+
 - Base de datos (Modelos y SQL)
 - API (Auth + BiancaAPI)
 - Backend (Toda la lógica de la página)
 - Frontend (El diseño que ves y lo que no puedes ver normalmente en la página)
----------
-English
----------
+
+### Progreso
+
+- Base de Datos ██████████ (100%)
+- API Auth ██████████ (100%)
+- API Principal ▁▁▁▁▁▁▁▁▁▁ (0%)
+- Frontend ▁▁▁▁▁▁▁▁▁▁ (0%)
+
+---
+
+##### [Español](#Español)
+
+## English
+
 ### What is this?
+
 A repo that contains all the source code and documentation of Cloud Nine Café's website: [cafecloudnine.com](https://cafecloudnine.com).
 
 Cloud Nine Café is a spanish community dedicated to Visual Novels and its translations.
 
 ### Contents of this repo
+
 - Database (Models & SQL)
 - API (Auth + BiancaAPI)
 - Backend (All the code for the website)
 - Frontend (The designs that you can and cannot see normally on the website)
 
-Credits/Créditos
-=======
+### Progress
+
+- Database ██████████ (100%)
+- Auth API ██████████ (100%)
+- Main API ▁▁▁▁▁▁▁▁▁▁ (0%)
+- Frontend ▁▁▁▁▁▁▁▁▁▁ (0%)
+
+# Credits/Créditos
+
 ###### English
+
 [Yorhel](https://code.blicky.net/yorhel) for the creation of [VNDB](https://vndb.org/) and the encouragement needed for the creation of this project.
 
 Misumi from [Proyectos Misumi](https://vn.misumi.com.ar/) for offering us a place to host the website alongside theirs.
@@ -44,6 +65,7 @@ The cute people from the community of [Cloud Nine Café](https://cafecloudnine.c
 Every single affiliate to the community for their feedback and suggestions.
 
 ###### Español
+
 [Yorhel](https://code.blicky.net/yorhel) por la creación de [VNDB](https://vndb.org/) y el ánimo necesario para la creación de este proyecto.
 
 Misumi de [Proyectos Misumi](https://vn.misumi.com.ar/) por ofrecernos un lugar para hostear la página en el mismo plan que ellos.
