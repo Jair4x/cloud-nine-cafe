@@ -1,0 +1,24 @@
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #2F2D74;">¡Ya casi, ${user.username || user.email}!</h1>
+    <p>Haz click o presiona en el botón de abajo para verificar tu cuenta:</p>
+
+    <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin: 20px 0;">
+        <tr>
+            <td align="center" bgcolor="#514DC8" style="border-radius: 4px;">
+                <a href="{{verificationLink}}" 
+                style="display: inline-block; padding: 12px 24px; background-color: #514DC8; 
+                        color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                    Verificar email
+                </a>
+            </td>
+        </tr>
+    </table>
+
+    <p style="color: #666;">O copia este link y pégalo en tu buscador:</p>
+    <code style="word-break: break-word; color: #2F2D74;">{{verificationLink}}</code>
+
+    <hr style="border: 1px solid #EEE; margin: 30px 0;">
+    <p style="font-size: 0.9em; color: #888;">
+        Si no fuiste tú, puedes ignorar este mail o reportarlo a support@cafecloudnine.com
+    </p>
+</div>
