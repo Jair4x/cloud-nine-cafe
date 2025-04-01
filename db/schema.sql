@@ -8,40 +8,39 @@
 -- ----- Notifications ----- --
 CREATE TABLE notifications (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     message TEXT NOT NULL CHECK (LENGTH(message) <= 200),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read BOOLEAN DEFAULT FALSE
 );
 
--- ----- History ----- --
-CREATE TYPE e_type AS ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review');
-CREATE TYPE e_type2 AS ENUM('Post', 'Comment', 'Review', 'TLGroup');
-CREATE TYPE e_type3 AS ENUM('Post', 'TLGroup');
+-- ----- Audit logs ----- --
+CREATE TYPE audit_log_entities AS ENUM('User', 'TLGroup', 'Post', 'Comment', 'Review');
+CREATE TYPE flag_entities AS ENUM('Post', 'Comment', 'Review', 'TLGroup');
+CREATE TYPE alias_entities AS ENUM('Post', 'TLGroup');
 
 CREATE TABLE change_history (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    entity_type e_type NOT NULL,
+    entity_type audit_log_entities NOT NULL,
     entity_id INT NOT NULL, -- Affected Entity ID
     field_changed VARCHAR(255) NOT NULL,
     old_value TEXT CHECK (LENGTH(old_value) <= 500),
     new_value TEXT CHECK (LENGTH(new_value) <= 500),
-    changed_by UUID REFERENCES emailpassword_users(user_id) ON DELETE SET NULL,
+    changed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE report_history (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    entity_type e_type NOT NULL,
+    entity_type audit_log_entities NOT NULL,
     entity_id INT NOT NULL,
-    reporter_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     report_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ----- Flags ----- --
 CREATE TABLE entity_flags (
-    entity_type e_type2 NOT NULL,
+    entity_type flag_entities NOT NULL,
     entity_id INT NOT NULL,
     hidden BOOLEAN NOT NULL DEFAULT FALSE,
     locked BOOLEAN NOT NULL DEFAULT FALSE,
@@ -53,7 +52,7 @@ CREATE TABLE entity_flags (
 CREATE TYPE aliases_action AS ENUM('Añadido', 'Editado', 'Eliminado');
 
 CREATE TABLE aliases (
-    entity_type e_type3 NOT NULL,
+    entity_type alias_entities NOT NULL,
     entity_id INT NOT NULL,
     alias VARCHAR(100) NOT NULL,
     PRIMARY KEY (entity_type, entity_id, alias)
@@ -61,7 +60,7 @@ CREATE TABLE aliases (
 
 CREATE TABLE aliases_history (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    entity_type e_type3 NOT NULL,
+    entity_type alias_entities NOT NULL,
     entity_id INT NOT NULL,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action_type aliases_action NOT NULL,
@@ -73,7 +72,7 @@ CREATE TABLE aliases_history (
 CREATE TYPE user_status AS ENUM('Activo', 'Desactivado', 'Muteado', 'Baneado');
 
 CREATE TABLE user_profiles (
-    user_id UUID PRIMARY KEY REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     username VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     avatar VARCHAR(255) NOT NULL CHECK (avatar LIKE 'https://%'),
@@ -82,7 +81,7 @@ CREATE TABLE user_profiles (
 );
 
 CREATE TABLE user_preferences (
-    user_id UUID PRIMARY KEY REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     bio TEXT CHECK (LENGTH(bio) <= 250),
     bio_hidden BOOLEAN NOT NULL DEFAULT FALSE,
     twitter VARCHAR(16),
@@ -114,7 +113,7 @@ CREATE TABLE roles (
 );
 
 CREATE TABLE user_role (
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role_id INT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, role_id)
 );
@@ -135,7 +134,7 @@ CREATE TABLE role_perms (
 
 -- ----- Users' Sessions ----- --
 CREATE TABLE user_sessions (
-  user_id UUID REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   session_handle VARCHAR(255) PRIMARY KEY,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -144,14 +143,14 @@ CREATE TABLE user_sessions (
 CREATE TYPE mod_action AS ENUM('Ban', 'Mute');
 
 CREATE TABLE users_password_hist (
-    user_id UUID PRIMARY KEY REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users_moderation_logs (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
-    mod_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    mod_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action mod_action NOT NULL,
     reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
@@ -175,7 +174,7 @@ CREATE TYPE group_role AS ENUM('Dueño/a', 'Editor/a de imágenes', 'Corrector/a
 
 CREATE TABLE tl_groups (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    owner_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     latin_name VARCHAR(100) NOT NULL,
     description TEXT NOT NULL CHECK (LENGTH(description) <= 500),
@@ -202,7 +201,7 @@ CREATE TABLE tl_groups_metadata (
 
 CREATE TABLE tl_groups_members (
     group_id INT NOT NULL REFERENCES tl_groups(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     member_name VARCHAR(50),
     member_role group_role NOT NULL DEFAULT 'Traductor/a',
     PRIMARY KEY (group_id, user_id)
@@ -211,7 +210,7 @@ CREATE TABLE tl_groups_members (
 CREATE TABLE tl_groups_updates (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     group_id INT NOT NULL REFERENCES tl_groups(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     post_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
     hidden BOOLEAN NOT NULL DEFAULT FALSE,
@@ -224,7 +223,7 @@ CREATE TYPE member_action AS ENUM('Añadido', 'Editado', 'Eliminado');
 CREATE TABLE tl_groups_members_hist (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     group_id INT NOT NULL REFERENCES tl_groups(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     change_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     action member_action NOT NULL,
     member_id INT,
@@ -245,7 +244,7 @@ CREATE TABLE tl_groups_updates_hist (
 CREATE TABLE tl_groups_moderation_logs (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     group_id INT NOT NULL REFERENCES tl_groups(id) ON DELETE CASCADE,
-    mod_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    mod_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     locked BOOLEAN NOT NULL,
@@ -268,7 +267,7 @@ CREATE TYPE post_section AS ENUM('Traduciendo', 'Corrigiendo', 'Editando imágen
 
 CREATE TABLE posts (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    op_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    op_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     publish_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     original_lang VARCHAR(2) NOT NULL REFERENCES languages(lang_code),
     translated_from VARCHAR(2) NOT NULL REFERENCES languages(lang_code),
@@ -329,7 +328,7 @@ CREATE TABLE comments (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     parent_id INT REFERENCES comments(id) ON DELETE CASCADE,
     post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 250),
     votes INT NOT NULL DEFAULT 0,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -337,7 +336,7 @@ CREATE TABLE comments (
 
 CREATE TABLE comments_votes (
     comment_id INT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     vote comment_vote NOT NULL,
     PRIMARY KEY (comment_id, user_id)
 );
@@ -346,7 +345,7 @@ CREATE TABLE comments_votes (
 CREATE TABLE comments_moderation_logs (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     comment_id INT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
-    mod_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    mod_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     hidden BOOLEAN NOT NULL,
@@ -357,7 +356,7 @@ CREATE TABLE comments_moderation_logs (
 CREATE TABLE reviews (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL CHECK (LENGTH(content) <= 1024),
     rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     votes INT NOT NULL DEFAULT 0,
@@ -367,7 +366,7 @@ CREATE TABLE reviews (
 
 CREATE TABLE reviews_votes (
     review_id INT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     vote comment_vote NOT NULL,
     PRIMARY KEY (review_id, user_id)
 );
@@ -386,7 +385,7 @@ CREATE TABLE reviews_attachments_hist (
 CREATE TABLE reviews_moderation_logs (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     review_id INT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
-    mod_id UUID NOT NULL REFERENCES emailpassword_users(user_id) ON DELETE CASCADE,
+    mod_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NOT NULL CHECK (LENGTH(reason) <= 250),
     hidden BOOLEAN NOT NULL,
