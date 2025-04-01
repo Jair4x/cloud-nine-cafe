@@ -27,7 +27,7 @@ router.get("/check-role/:role", async (req, res) => {
             .join("roles", "user_role.roleId", "roles.id")
             .where({ userId });
 
-        const hasRole = userRoles.some((userRole) => userRole.roleId === role);
+        const hasRole = userRoles.some((userRole) => userRole.name === role);
         res.json({ hasRole });
     } catch (error) {
         console.error("Error al verificar el rol:", error);

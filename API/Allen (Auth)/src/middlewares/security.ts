@@ -1,6 +1,6 @@
+import ms from "ms";
 import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
-import "dotenv/config";
 
 export const rateLimiter = (max: number, windowMs: number) =>
     rateLimit({

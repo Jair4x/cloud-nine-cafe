@@ -17,7 +17,7 @@ router.post("/signup", async (req, res) => {
             return res.status(400).json({ error: "El usuario ya existe." });
         }
 
-        const hashedPassword = secureHash(password);
+        const hashedPassword = await secureHash(password);
         const userId = uuidv4();
         const token = uuidv4();
 
