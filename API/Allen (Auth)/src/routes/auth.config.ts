@@ -35,11 +35,9 @@ app.use(
 
                     const pwHash = await secureHash(credentials.password);
 
-                    if (isEmail) {
-                        user = await db.select().from("users").where({ email: identifier, password: pwHash }).first();
-                    } else {
-                        user = await db.select().from("users").where({ username: identifier, password: pwHash }).first();
-                    }
+                    user = isEmail
+                        ? await db.select().from("users").where({ email: identifier, password: pwHash }).first()
+                        : await db.select().from("users").where({ username: identifier, password: pwHash }).first();
 
                     if (!user) {
                         throw new Error("Credenciales inválidas.");
