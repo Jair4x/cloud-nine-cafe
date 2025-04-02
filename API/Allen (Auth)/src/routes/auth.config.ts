@@ -71,7 +71,13 @@ app.use(
         session: {
             strategy: "jwt",
         },
-        adapter: DrizzleAdapter(db),
+        adapter: DrizzleAdapter(db, {
+            usersTable: users,
+            accountsTable: accounts,
+            sessionsTable: sessions,
+            verificationTokensTable: verificationTokens,
+            authenticatorsTable: authenticators,
+        }),
     })
 );
 
